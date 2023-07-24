@@ -112,6 +112,9 @@ function exportList(){
     }
     arrary.push(map)
   }
+  arrary = arrary.sort((a,b)=>{
+    return a.name.localeCompare(b.name)
+  })
   console.log(arrary)
 }
 function likeWater(){
@@ -207,6 +210,9 @@ function analysisStar(){
     lastArrary.push(map2)
     keyMap[t] = map2.price.split('~')[0]
   }
+  lastArrary = lastArrary.sort((a,b)=>{
+    return a.name.localeCompare(b.name)
+  })
   searchAbout.starList = lastArrary;
   searchAbout.keyMap = keyMap;
 }
@@ -221,7 +227,8 @@ function openUrl(itemId : String){
     window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)
 }
 function search(){
-  reset()
+  searchAbout.now_step = 0
+  searchAbout.lastArrary = []
   searchAbout.nextId = ''
   searchAbout.inSearch = true
   searchAbout.allStep = step.value
@@ -265,14 +272,14 @@ function getBreakPrice(list : any){
   return flag
 }
 function getLowPrice(list : any){
-  let low = list[0].price
-  let high = list[0].price
+  let low = Number(list[0].price)
+  let high = Number(list[0].price)
   for(let i of list){
-    if(i.price < low){
-      low = i.price
+    if(Number(i.price) < low){
+      low = Number(i.price)
     }
-    if(i.price > high){
-      high = i.price
+    if(Number(i.price) > high){
+      high = Number(i.price)
     }
   }
   return low + '~' + high
@@ -287,14 +294,15 @@ function bilibiliGoodsSearch(){
   }
   $.ajax({
     type: "POST",
-    url: 'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
+    url: 'http://bilidog.top/api/mall-magic-c/internet/c2c/v2/list',
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
+      "Access-Control-Allow-Credentials":"true",
     },
-    // xhrFields: {
-    //   withCredentials: true // 允许跨域携带cookie信息
-    // },
+    xhrFields: {
+      withCredentials: true // 允许跨域携带cookie信息
+    },
     data: JSON.stringify(data),
     success: function (res) {
       if(res.code == 0){
@@ -330,6 +338,11 @@ function bilibiliGoodsSearch(){
           analysisAction()
           localStorage.setItem("lowestMap",JSON.stringify(searchAbout.lowestMap));
         }
+      }else{
+        //失败重发
+        setTimeout(()=>{
+          bilibiliGoodsSearch()
+        },1000)
       }
     },
     error:function (res) {
