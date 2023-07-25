@@ -47,10 +47,10 @@
       
     </div>
     <div class="goods-box" v-show="searchAbout.showAnalysis">
-      <div :class="searchAbout.keyMap[item.name]?'goods-item-instar':(item.breakNewPrice?'goods-item-break':'goods-item')" v-for="(item,index) in searchAbout.lastArrary" :key="index">
+      <div :class="searchAbout.keyMap[item.itemsId]?'goods-item-instar':(item.breakNewPrice?'goods-item-break':'goods-item')" v-for="(item,index) in searchAbout.lastArrary" :key="index">
         <div>
-          <div v-if="searchAbout.keyMap[item.name]">收藏夹最低价：{{ searchAbout.keyMap[item.name] }}</div>
-          <div v-if="searchAbout.lowestMap[item.name]">历史搜索最低价：{{ searchAbout.lowestMap[item.name] }}</div>
+          <div v-if="searchAbout.keyMap[item.itemsId]">收藏夹最低价：{{ searchAbout.keyMap[item.itemsId] }}</div>
+          <div v-if="searchAbout.lowestMap[item.itemsId]">历史搜索最低价：{{ searchAbout.lowestMap[item.itemsId] }}</div>
           <img class="goods-item-img" :src=item.img alt="">
           <div>{{item.name}}</div>
           <div v-if="item.list.length > 0">
@@ -191,17 +191,18 @@ function analysisStar(){
   let arrary = JSON.parse(localStorage.getItem("starList")) || [];
   let map = {}
   for(let i of arrary){
-    if(map[i.name] && map[i.name].length > 0){
-      map[i.name].push(i)
+    if(map[i.itemsId.join(',')] && map[i.itemsId.join(',')].length > 0){
+      map[i.itemsId.join(',')].push(i)
     }else{
-      map[i.name] = [i]
+      map[i.itemsId.join(',')] = [i]
     }
   } 
   let lastArrary = []
   let keyMap = {}
   for(let t in map){
     let map2 ={
-      name:t,
+      name:map[t][0].name,
+      itemsId:t,
       list:map[t],
       img:map[t][0].icon,
       id:map[t][0].id,
@@ -237,20 +238,19 @@ function search(){
 }
 function analysisAction(){
   let arrary = searchAbout.goodsList
-  let map ={
-
-  }
+  let map ={}
   for(let i of arrary){
-    if(map[i.name] && map[i.name].length > 0){
-      map[i.name].push(i)
+    if(map[i.itemsId.join(',')] && map[i.itemsId.join(',')].length > 0){
+      map[i.itemsId.join(',')].push(i)
     }else{
-      map[i.name] = [i]
+      map[i.itemsId.join(',')] = [i]
     }
   } 
   let lastArrary = []
   for(let t in map){
     let map2 ={
-      name:t,
+      name:map[t][0].name,
+      itemsId:t,
       list:map[t],
       breakNewPrice:getBreakPrice(map[t]),
       img:map[t][0].icon,
@@ -294,32 +294,53 @@ function bilibiliGoodsSearch(){
   }
   $.ajax({
     type: "POST",
-    url: 'http://bilidog.top/api/mall-magic-c/internet/c2c/v2/list',
+    // url: 'http://bilidog.top/api/mall-magic-c/internet/c2c/v2/list',
+    url: 'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Credentials":"true",
+      // "Access-Control-Allow-Credentials":"true",
     },
     xhrFields: {
-      withCredentials: true // 允许跨域携带cookie信息
+      // withCredentials: true // 允许跨域携带cookie信息
     },
     data: JSON.stringify(data),
     success: function (res) {
       if(res.code == 0){
         //精简内容 优化 数组
+        // for(let item of res.data.data){
+
+        // }
         res.data.data = res.data.data.map((item : any)=>{
           let breakNewPrice = false
-          if(searchAbout.lowestMap[item.c2cItemsName]){
-            if(Number(item.showPrice) < Number(searchAbout.lowestMap[item.c2cItemsName])){
-              searchAbout.lowestMap[item.c2cItemsName] = Number(item.showPrice)
-              breakNewPrice = true
+          let itemsId = item.detailDtoList.map((itema)=>{
+            return itema.skuId
+          })
+          itemsId = itemsId.sort()
+          if(itemsId.length == 1){
+            let key = itemsId[0]
+            if(searchAbout.lowestMap[key]){
+              if(Number(item.showPrice) < Number(searchAbout.lowestMap[key])){
+                searchAbout.lowestMap[key] = Number(item.showPrice)
+                breakNewPrice = true
+              }
+            }else{
+              searchAbout.lowestMap[key] = Number(item.showPrice)
             }
           }else{
-            searchAbout.lowestMap[item.c2cItemsName] = Number(item.showPrice)
+            let all = 0
+            for(let i of itemsId){
+              let price = searchAbout.lowestMap[i] || 0
+              all += Number(price)
+            }
+            if(Number(all) < Number(item.showPrice)){
+              breakNewPrice = true
+            }
           }
           return{
             name:item.c2cItemsName,
             icon:item.detailDtoList[0].img,
+            itemsId:itemsId,
             price:item.showPrice,
             breakNewPrice:breakNewPrice,
             id:item.c2cItemsId
@@ -333,7 +354,7 @@ function bilibiliGoodsSearch(){
         if(searchAbout.now_step < searchAbout.allStep){
           setTimeout(()=>{
             bilibiliGoodsSearch()
-          },1000)
+          },500)
         }else{
           analysisAction()
           localStorage.setItem("lowestMap",JSON.stringify(searchAbout.lowestMap));
@@ -342,7 +363,7 @@ function bilibiliGoodsSearch(){
         //失败重发
         setTimeout(()=>{
           bilibiliGoodsSearch()
-        },1000)
+        },500)
       }
     },
     error:function (res) {
