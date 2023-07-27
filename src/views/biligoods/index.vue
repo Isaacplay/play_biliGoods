@@ -3,7 +3,7 @@
     <div class="filter-header">
       <div class="filter-header-top">
         <div class="filter-header-left">
-          <div class="filter-item">
+          <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">类型:</div>
             <el-select v-model="categoryFilter" clearable class="m-2" placeholder="Select" size="default">
               <el-option v-for="item in categoryFilterList" :key="item.value" :label="item.label" :value="item.value"/>
@@ -15,13 +15,13 @@
               <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </div>
-          <div class="filter-item">
+          <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">价格:</div>
             <el-select v-model="priceFilters" multiple clearable class="m-2" placeholder="Select" size="default">
               <el-option v-for="item in priceFiltersList" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
           </div>
-          <div class="filter-item">
+          <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">折扣:</div>
             <el-select v-model="discountFilters" multiple clearable class="m-2" placeholder="Select" size="default">
               <el-option v-for="item in discountFiltersList" :key="item.value" :label="item.label" :value="item.value"/>
@@ -29,7 +29,7 @@
           </div>
         </div>
         <div class="filter-header-right">
-          <el-input-number v-model="step" :step="10" :min="10" :max="1000" controls-position="right" step-strictly />
+          <el-input-number v-model="step" :step="10" :min="10" :max="4000" controls-position="right" step-strictly />
           <el-button color="#626aef" @click="search">查询</el-button>
           <el-button color="#626aef"  plain @click="reset">重置</el-button>
           <el-button color="#626aef"  plain @click="likeWater">流水刷新</el-button>
@@ -39,7 +39,7 @@
       <div v-show="searchAbout.inSearch" class="search-more">
           <div class="search-front">Total : {{searchAbout.allStep}},Now : {{searchAbout.now_step}}</div>
           <div v-show="searchAbout.allStep == searchAbout.now_step">
-            <el-input-number style="margin-right: 24px;" v-model="addStep" :step="10" :min="10" :max="500" controls-position="right" step-strictly />
+            <el-input-number style="margin-right: 24px;" v-model="addStep" :step="10" :min="10" :max="2000" controls-position="right" step-strictly />
             <el-button style="margin-right: 24px;" color="#626aef" @click="addSearch">追加</el-button>
           </div>
           <el-button v-show="searchAbout.allStep == searchAbout.now_step" color="#626aef"  plain @click="clear">重新搜索</el-button>
@@ -89,6 +89,7 @@ import { ref,reactive ,onMounted} from 'vue'
 import { ElMessage  } from 'element-plus'
 const addStep = ref(10)
 const stopWater = ref(false)
+const haveCookie = ref(false)
 
 onMounted(() => {
   document.onkeydown=function(e){    //对整个页面监听  
@@ -99,15 +100,36 @@ onMounted(() => {
     } 
     stopWater.value = true
   }
-  analysisStar()
-  searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap")) || {};
+  haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
+  analysisStar()  //生成收藏夹
+  searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap") || "{}") ;   //获取最低价
 })
+function checkCookie(objname : string){//获取指定名称的cookie的值
+  var arrstr = document.cookie.split("; ");
+  for(var i = 0;i < arrstr.length;i ++){
+    var temp = arrstr[i].split("=");
+    if(temp[0] == objname) return true;
+  }
+  return false
+}
+function UpdateCookies(cookies : string){
+  let datas = cookies.split(";");
+  var now = new Date();
+  now.setMonth( now.getMonth() + 1 );
+  document.cookie = "expires=" + now.toUTCString() + ";";
+  for(var i=0; i<datas.length; i++)
+  {
+    document.cookie = datas[i] + ";expires=" + now.toUTCString() + ";";
+  }
+  return "success";
+};
 function exportList(){
   analysisStar()
   let arrary = []
   for(let i of searchAbout.starList){
     let map = {
       name:i.name,
+      itemsId:i.itemsId,
       price:Number(i.price.split('~')[0])
     }
     arrary.push(map)
@@ -138,6 +160,7 @@ interface searchAbout {
     breakNewPrice: any
     name: any;
     list: any;
+    itemsId:string,
     id:any;
     img: any;
     price: string;
@@ -148,8 +171,8 @@ interface searchAbout {
   now_step: number;
   drawer: boolean;
   starList: any[];
-  keyMap: {any:any};
-  lowestMap: {any:any};
+  keyMap: {[key: string]:number};
+  lowestMap: {[key: string]:any};
   showAnalysis: boolean;
 }
 interface starMap {
@@ -172,7 +195,7 @@ const searchAbout : searchAbout = reactive({
   showAnalysis:false
 })
 function removeFromStar(item : starMap){
-  let list = JSON.parse(localStorage.getItem("starList")) || [];
+  let list = JSON.parse(localStorage.getItem("starList") ) ;
   for(let i in list){
     if(item.id == list[i].id){
       console.log(i)
@@ -188,7 +211,7 @@ function showStarList(){
   searchAbout.drawer = true
 }
 function analysisStar(){
-  let arrary = JSON.parse(localStorage.getItem("starList")) || [];
+  let arrary = JSON.parse(localStorage.getItem("starList") || "[]");
   let map = {}
   for(let i of arrary){
     if(map[i.itemsId.join(',')] && map[i.itemsId.join(',')].length > 0){
@@ -218,7 +241,7 @@ function analysisStar(){
   searchAbout.keyMap = keyMap;
 }
 function addToStar(item : starMap){
-  let list = JSON.parse(localStorage.getItem("starList")) || [];
+  let list = JSON.parse(localStorage.getItem("starList") || "[]") ;
   list = list.concat([item])
   localStorage.setItem("starList",JSON.stringify(list));
   ElMessage.success('添加到收藏夹成功！')
@@ -246,6 +269,11 @@ function analysisAction(){
       map[i.itemsId.join(',')] = [i]
     }
   } 
+  let filterMap = {
+    'star':[],
+    'newLow':[],
+    'nomal':[]
+  }
   let lastArrary = []
   for(let t in map){
     let map2 ={
@@ -257,8 +285,16 @@ function analysisAction(){
       id:map[t][0].id,
       price:getLowPrice(map[t])
     }
-    lastArrary.push(map2)
+    if(searchAbout.keyMap[t]){
+      filterMap.star.push(map2)
+    }else if(map2.breakNewPrice){
+      filterMap.newLow.push(map2)
+    }else{
+      filterMap.nomal.push(map2)
+    }
   }
+  console.log(filterMap.star)
+  lastArrary = filterMap.star.concat(filterMap.newLow,filterMap.nomal)
   searchAbout.lastArrary = lastArrary
   searchAbout.showAnalysis = true
 }
@@ -294,23 +330,21 @@ function bilibiliGoodsSearch(){
   }
   $.ajax({
     type: "POST",
-    // url: 'http://bilidog.top/api/mall-magic-c/internet/c2c/v2/list',
-    url: 'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
+    // url: 'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/v2/list',
+    // url: 'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
+    url: haveCookie.value?'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/v2/list':'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
-      // "Access-Control-Allow-Credentials":"true",
+      "Access-Control-Allow-Credentials":"true",
     },
     xhrFields: {
-      // withCredentials: true // 允许跨域携带cookie信息
+      withCredentials: haveCookie.value //True :允许跨域携带cookie信息 
     },
     data: JSON.stringify(data),
     success: function (res) {
       if(res.code == 0){
         //精简内容 优化 数组
-        // for(let item of res.data.data){
-
-        // }
         res.data.data = res.data.data.map((item : any)=>{
           let breakNewPrice = false
           let itemsId = item.detailDtoList.map((itema)=>{
@@ -333,7 +367,7 @@ function bilibiliGoodsSearch(){
               let price = searchAbout.lowestMap[i] || 0
               all += Number(price)
             }
-            if(Number(all) < Number(item.showPrice)){
+            if(Number(item.showPrice) < Number(all)){
               breakNewPrice = true
             }
           }
@@ -354,7 +388,7 @@ function bilibiliGoodsSearch(){
         if(searchAbout.now_step < searchAbout.allStep){
           setTimeout(()=>{
             bilibiliGoodsSearch()
-          },500)
+          },1000)
         }else{
           analysisAction()
           localStorage.setItem("lowestMap",JSON.stringify(searchAbout.lowestMap));
@@ -438,7 +472,7 @@ const step = ref(20)
   flex-wrap: wrap;
 }
 .goods-item{
-  width: 16%;
+  width: calc(20% - 12px);
   border: 4px solid rgb(235,235,235);
   padding: 24px 0;
   margin-right: 12px;
@@ -451,7 +485,7 @@ const step = ref(20)
   text-align: center;
 }
 .goods-item-instar{
-  width: 16%;
+  width: calc(20% - 12px);
   border: 4px solid #fb7299;
   padding: 24px 0;
   margin-right: 12px;
@@ -464,7 +498,7 @@ const step = ref(20)
   text-align: center;
 }
 .goods-item-break{
-  width: 16%;
+  width: calc(20% - 12px);
   border: 4px solid #6dc781;
   padding: 24px 0;
   margin-right: 12px;

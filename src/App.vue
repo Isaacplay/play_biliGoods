@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
   function setSize(){
-    let whdef = 75/1000; //表示高 1000 的设计图，使用75px的默认值
+    let whdef = 18/1000; //表示高 1000 的设计图，使用18px的默认值
     let h = window.innerHeight;
     let w = window.innerWidth;
     let rem = h * whdef;

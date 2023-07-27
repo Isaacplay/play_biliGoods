@@ -1,7 +1,18 @@
 <template>
   <div class="container">
-    <div class="memu-item" v-for="(item,index) in menuList" :key="index" @click="gotoMenuAction(item)" >
-      {{item.name}}
+    <div class="top-header">
+
+    </div>
+    <div class="contant">
+      <div class="left-con">
+
+      </div>
+      <div class="main-con">
+        <biligoods></biligoods>
+      </div>
+      <div class="right-con">
+
+      </div>
     </div>
   </div>
 </template>
@@ -9,40 +20,41 @@
 <script setup lang="ts">
 import { reactive,nextTick } from 'vue'
 import {useRoute,useRouter} from 'vue-router'
+import biligoods from './biligoods/index.vue'
 const router = useRouter()
 const route = useRoute()
-
-const menuList = reactive(
-  [
-    {name:'i18N翻译',key:'i18n',path:'/transportI18n'},
-    {name:'JSON合并',key:'jsonToexcel',path:'/jsonToexcel'},
-    {name:'Template',key:'tem',path:'/Template'},
-    {name:'ThreeJS',key:'ThreeJS',path:'/ThreeJS'},
-    {name:'biligoods',key:'biligoods',path:'/biligoods'},
-  ]
-)
-
-function gotoMenuAction(item:any){
-  router.push(item.path)
+components: {
+  biligoods
 }
+
+
+
+
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .container{
-  display: flex;
-  flex-wrap: wrap;
-  padding: 24px;
-}
-.memu-item{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #409eff;
-  cursor: pointer;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 12px;
-  margin-right: 30px;
-  border: 2px solid #409eff;
+  width: 100%;
+  font-size: 14px;
+  background-color: rgb(235,235,235);
+  .top-header{
+    width: 100%;
+    height: 120px;
+    background-color: #66ccff;
+  }
+  .contant{
+    display: flex;
+    height: calc(100% - 120px);
+    .main-con{
+      width: 80%;
+      background-color: white;
+    }
+    .left-con{
+      width: 10%;
+    }
+    .right-con{
+      width: 10%;
+    }
+  }
 }
 </style>

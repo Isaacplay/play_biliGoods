@@ -6,7 +6,7 @@ import {router} from './router/index'
 import './utils/css/base.css'
 import $ from 'jquery'
 import vue3TsJsoneditor from 'vue3-ts-jsoneditor';
-
+import '@/styles/index.scss'
 
 const app = createApp(App)
 
