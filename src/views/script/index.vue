@@ -28,8 +28,6 @@ const step = ref(3)
 const interval = reactive({
   'play':null,
   'goodsList':[],
-  'allStep' : 10, 
-  'now_step' : 0,
   'nextId' : '',
   'log':[]
 })
@@ -50,6 +48,7 @@ function start(flag = true){
 }
 
 function bilibiliGoodsSearch(){
+  interval.goodsList = []
   let data = {
     nextId:interval.nextId.length == 0?null:interval.nextId,
   }
@@ -74,18 +73,8 @@ function bilibiliGoodsSearch(){
                   item.itemsId = itemsId.sort().join(',')
                   return item
               })
-              let arrary = interval.goodsList
-              arrary = arrary.concat(res.data.data)
-              interval.goodsList = arrary
-              interval.nextId = res.data.nextId
-              interval.now_step += res.data.data.length
-              if(interval.now_step < interval.allStep){
-                  setTimeout(()=>{
-                      bilibiliGoodsSearch()
-                  },2000)
-              }else{
-                  analysisAction()
-              }
+              interval.goodsList = res.data.data
+              analysisAction()
           }
       }
       catch(err){

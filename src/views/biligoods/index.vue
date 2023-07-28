@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height: 100%;">
     <div class="filter-header">
       <div class="filter-header-top">
         <div class="filter-header-left">
@@ -33,7 +33,7 @@
           <el-button color="#626aef" @click="search">查询</el-button>
           <el-button color="#626aef"  plain @click="reset">重置</el-button>
           <el-button color="#626aef"  plain @click="likeWater">流水刷新</el-button>
-          <el-button color="#626aef"  plain @click="showStarList">收藏夹</el-button>
+          <!-- <el-button color="#626aef"  plain @click="showStarList">收藏夹</el-button> -->
         </div>
       </div>
       <div v-show="searchAbout.inSearch" class="search-more">
@@ -467,9 +467,11 @@ const step = ref(20)
 }
 .goods-box{
   padding: 24px;
-  border-radius: 24px;
   display: flex;
   flex-wrap: wrap;
+  background-color: white;
+  height: calc(100% - 120px);
+  overflow-y: scroll;
 }
 .goods-item{
   width: calc(20% - 12px);
@@ -528,18 +530,17 @@ const step = ref(20)
   height: auto;
 }
 .filter-header{
-  padding: 24px; 
   position: sticky;
+  height: 120px;
   top: 0;
   left: 0;
   width: 100%;
-  background-color: white;
-  border-bottom: 1px solid rgb(235,235,235); 
+  background-color: none;
   z-index: 999;
 }
 .filter-header-top{
   display: flex;
-  padding: 24px; 
+  padding: 12px 24px; 
   justify-content: space-between;
   align-items: center;
 }
