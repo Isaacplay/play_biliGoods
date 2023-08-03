@@ -16,9 +16,18 @@
 import { ref,reactive ,onMounted} from 'vue'
 import { ElMessage  } from 'element-plus'
 const haveCookie = ref(false)
+let settingMap = reactive({
+  me:{
+    url:'',
+  }
+})
 
 onMounted(() => {
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
+  if(localStorage.getItem("settingMap")){
+    let map  = JSON.parse(localStorage.getItem("settingMap") || "{}") ;   //获取设置
+    settingMap.me = map.me
+  }
   if(haveCookie.value){
     getMyUserInfo()
     getSelledList()
@@ -68,7 +77,7 @@ const itemAnalysisData = reactive({
 function getMyUserInfo(){
   $.ajax({
     type: "GET",
-    url: 'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryUserInfo',
+    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/queryUserInfo`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
@@ -92,7 +101,7 @@ function getMyUserInfo(){
 function getMyPublish(){
   $.ajax({
     type: "GET",
-    url: 'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/pageQueryMyPublish?pageSize=999&pageNo=1&filterType=1',
+    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPublish?pageSize=999&pageNo=1&filterType=1`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
@@ -115,7 +124,7 @@ function getMyPublish(){
 function getMyPurchasedItems(){
   $.ajax({
     type: "GET",
-    url: 'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/pageQueryMyPurchasedItems?pageSize=150&pageNo=1',
+    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPurchasedItems?pageSize=150&pageNo=1`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
@@ -138,7 +147,7 @@ function getMyPurchasedItems(){
 function getSelledList(){
   $.ajax({
     type: "GET",
-    url: 'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/pageQueryMyPublish?pageSize=200&pageNo=1&filterType=2',
+    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPublish?pageSize=200&pageNo=1&filterType=2`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",

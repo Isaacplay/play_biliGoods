@@ -5,13 +5,13 @@
         <div class="filter-header-left">
           <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">类型:</div>
-            <el-select v-model="categoryFilter" clearable class="m-2" placeholder="Select" size="default">
+            <el-select v-model="categoryFilter" clearable class="m-2 w120" placeholder="Select" size="default">
               <el-option v-for="item in categoryFilterList" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
           </div>
           <div class="filter-item">
             <div class="filter-name">排序:</div>
-            <el-select v-model="sortType" clearable class="m-2" placeholder="Select" size="default">
+            <el-select v-model="sortType" clearable class="m-2 w120" placeholder="Select" size="default">
               <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </div>
@@ -23,7 +23,7 @@
           </div>
           <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">折扣:</div>
-            <el-select v-model="discountFilters" multiple clearable class="m-2" placeholder="Select" size="default">
+            <el-select v-model="discountFilters" multiple clearable class="m-2 w120" placeholder="Select" size="default">
               <el-option v-for="item in discountFiltersList" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
           </div>
@@ -47,7 +47,7 @@
       </div>
       
     </div>
-    <div class="goods-box" v-show="searchAbout.showAnalysis">
+    <div class="goods-box">
       <div :class="searchAbout.keyMap[item.itemsId]?'goods-item-instar':(item.breakNewPrice?'goods-item-break':'goods-item')" v-for="(item,index) in searchAbout.lastArrary" :key="index">
         <div>
           <div v-if="searchAbout.keyMap[item.itemsId]">收藏夹最低价：{{ searchAbout.keyMap[item.itemsId] }}</div>
@@ -91,6 +91,11 @@ import { ElMessage  } from 'element-plus'
 const addStep = ref(10)
 const stopWater = ref(false)
 const haveCookie = ref(false)
+let settingMap = reactive({
+  biligoods:{
+    url:'',
+  },
+})
 
 onMounted(() => {
   document.onkeydown=function(e){    //对整个页面监听  
@@ -104,6 +109,10 @@ onMounted(() => {
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   analysisStar()  //生成收藏夹
   searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap") || "{}") ;   //获取最低价
+  if(localStorage.getItem("settingMap")){
+    let map  = JSON.parse(localStorage.getItem("settingMap") || "{}") ;   //获取设置
+    settingMap.biligoods = map.biligoods
+  }
 })
 function checkCookie(objname : string){//获取指定名称的cookie的值
   var arrstr = document.cookie.split("; ");
@@ -333,17 +342,15 @@ function bilibiliGoodsSearch(){
   }
   $.ajax({
     type: "POST",
-    // url: 'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/v2/list',
-    // url: 'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
-    url: haveCookie.value?'http://111.229.88.32:7777/play_biligoods/api/mall-magic-c/internet/c2c/v2/list':'https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list',
+    url: `${settingMap.biligoods.url}/mall-magic-c/internet/c2c/v2/list`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
       "Access-Control-Allow-Credentials":"true",
     },
-    xhrFields: {
-      withCredentials: haveCookie.value //True :允许跨域携带cookie信息 
-    },
+    // xhrFields: {
+    //   withCredentials: haveCookie.value //True :允许跨域携带cookie信息 
+    // },
     data: JSON.stringify(data),
     success: function (res) {
       if(res.code == 0){
