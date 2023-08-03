@@ -12,6 +12,7 @@
     <div class="goods-box">
         <div class="goods-item" v-for="(item,index) in searchAbout.starList" :key="index">
           <div>
+            <div v-if="searchAbout.lowestMap[item.itemsId]">历史搜索最低价：{{ searchAbout.lowestMap[item.itemsId] }}</div>
             <img class="goods-item-img" :src=item.img alt="">
             <div>{{item.name}}</div>
             <div v-for="(item2) in item.list" :key="item2.id">
@@ -32,6 +33,7 @@ const haveCookie = ref(false)
 
 onMounted(() => {
   analysisStar()  //生成收藏夹
+  searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap") || "{}") ;   //获取最低价
 })
 
 function exportList(){
@@ -51,25 +53,9 @@ function exportList(){
   console.log(arrary)
 }
 interface searchAbout {
-  goodsList: any[];
-  lastArrary: {
-    breakNewPrice: any
-    name: any;
-    list: any;
-    itemsId:string,
-    id:any;
-    img: any;
-    price: string;
-  }[];
-  inSearch: boolean;
-  nextId: string;
-  allStep: number;
-  now_step: number;
-  drawer: boolean;
   starList: any[];
   keyMap: {[key: string]:number};
   lowestMap: {[key: string]:any};
-  showAnalysis: boolean;
 }
 interface starMap {
   name: string;
@@ -78,17 +64,9 @@ interface starMap {
   price: string;
 }
 const searchAbout : searchAbout = reactive({
-  goodsList:[],
-  lastArrary:[],
-  inSearch:false,
-  nextId:'',
-  allStep:0,
-  now_step:0,
-  drawer:false,
   starList:[],
   keyMap:{},
   lowestMap:{},
-  showAnalysis:false
 })
 function removeFromStar(item : starMap){
   let list = JSON.parse(localStorage.getItem("starList") ) ;

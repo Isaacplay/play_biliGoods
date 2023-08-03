@@ -43,6 +43,7 @@
             <el-button style="margin-right: 24px;" color="#626aef" @click="addSearch">追加</el-button>
           </div>
           <el-button v-show="searchAbout.allStep == searchAbout.now_step" color="#626aef"  plain @click="clear">重新搜索</el-button>
+          <el-button style="margin-right: 24px;" v-if="searchAbout.isBan" color="#626aef">自求多福</el-button>
       </div>
       
     </div>
@@ -170,6 +171,7 @@ interface searchAbout {
   allStep: number;
   now_step: number;
   drawer: boolean;
+  isBan:boolean;
   starList: any[];
   keyMap: {[key: string]:number};
   lowestMap: {[key: string]:any};
@@ -192,7 +194,8 @@ const searchAbout : searchAbout = reactive({
   starList:[],
   keyMap:{},
   lowestMap:{},
-  showAnalysis:false
+  showAnalysis:false,
+  isBan:false
 })
 function removeFromStar(item : starMap){
   let list = JSON.parse(localStorage.getItem("starList") ) ;
@@ -344,6 +347,7 @@ function bilibiliGoodsSearch(){
     data: JSON.stringify(data),
     success: function (res) {
       if(res.code == 0){
+        searchAbout.isBan = false
         //精简内容 优化 数组
         res.data.data = res.data.data.map((item : any)=>{
           let breakNewPrice = false
@@ -388,16 +392,19 @@ function bilibiliGoodsSearch(){
         if(searchAbout.now_step < searchAbout.allStep){
           setTimeout(()=>{
             bilibiliGoodsSearch()
-          },1000)
+          },2000)
         }else{
           analysisAction()
           localStorage.setItem("lowestMap",JSON.stringify(searchAbout.lowestMap));
         }
       }else{
         //失败重发
-        setTimeout(()=>{
-          bilibiliGoodsSearch()
-        },500)
+        analysisAction()
+        localStorage.setItem("lowestMap",JSON.stringify(searchAbout.lowestMap));
+        searchAbout.isBan = true
+        // setTimeout(()=>{
+        //   bilibiliGoodsSearch()
+        // },10000)
       }
     },
     error:function (res) {

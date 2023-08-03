@@ -1,13 +1,25 @@
 <template>
   <div class="container">
     <div class="top-header">
-      <div class="left-header" @click="changeToHome()">
-        <img v-if="homePage.isbiliGoods" src="@/assets/imgs/home1.png"/>
-        <img v-if="!homePage.isbiliGoods" src="@/assets/imgs/home2.png"/>
+      <div class="left-header">
+        <div v-if="!homePage.isbiliGoods" @click="changeToHome()">
+          <img  src="@/assets/imgs/home1.png"/>
+          <div>首页</div>
+        </div>
+        <div v-if="!homePage.isFavorites && homePage.isbiliGoods" @click="changeToFav()">
+          <img src="@/assets/imgs/home2.png"/>
+          <div>收藏夹</div>
+        </div>
       </div>
-      <div class="right-header" @click="changeToFav()">
-        <img v-if="homePage.isFavorites" src="@/assets/imgs/fa1.jpg"/>
-        <img v-if="!homePage.isFavorites" src="@/assets/imgs/fa2.png"/>
+      <div class="right-header" >
+        <div v-if="!homePage.isFavorites && !homePage.isbiliGoods" @click="changeToFav()">
+          <img src="@/assets/imgs/home2.png"/>
+          <div>收藏夹</div>
+        </div>
+        <div v-if="!homePage.isMe" @click="changeToMe()">
+          <img src="@/assets/imgs/fa2.png"/>
+          <div>我的</div>
+        </div>
       </div>
     </div>
     <div class="contant">
@@ -15,6 +27,7 @@
       <div class="main-con">
         <biligoods v-if="homePage.isbiliGoods"></biligoods>
         <favorites v-if="homePage.isFavorites"></favorites>
+        <me v-if="homePage.isMe"></me>
       </div>
       <div class="right-con"></div>
     </div>
@@ -25,24 +38,26 @@ import { reactive,nextTick } from 'vue'
 import {useRoute,useRouter} from 'vue-router'
 import biligoods from './biligoods/index.vue'
 import favorites from './favorites/favorites.vue'
+import me from './me/me.vue'
 const homePage = reactive({
   isbiliGoods:true,
-  isFavorites:false
+  isFavorites:false,
+  isMe:false
 })
-components: {
-  biligoods,favorites
+function changeToMe(){
+  homePage.isbiliGoods = false
+  homePage.isFavorites = false
+  homePage.isMe = true
 }
 function changeToHome(){
-  if(!homePage.isbiliGoods){
-    homePage.isbiliGoods = true
-    homePage.isFavorites = false
-  }
+  homePage.isbiliGoods = true
+  homePage.isFavorites = false
+  homePage.isMe = false
 }
 function changeToFav(){
-  if(!homePage.isFavorites){
-    homePage.isFavorites = true
-    homePage.isbiliGoods = false
-  }
+  homePage.isbiliGoods = false
+  homePage.isFavorites = true
+  homePage.isMe = false
 }
 </script>
 <style lang="scss" scoped>
@@ -66,7 +81,7 @@ function changeToFav(){
     // background-size: contain;
     // background-repeat: no-repeat;
     img{
-      width: 60%;
+      width: 50%;
       height: auto;
       cursor: pointer;
     }
