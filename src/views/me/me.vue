@@ -8,7 +8,39 @@
       <div class="header-item"><div class="left-name">预期总利润：</div><div class="value">{{(itemAnalysisData.nowSellMoney + itemAnalysisData.downSellMoney - itemAnalysisData.allBuyMoney).toFixed(2) }}</div></div>
     </div>
     <div class="me-box">
-
+      <div class="rank-box">
+        <div class="rank-box-tilte">最近售出商品</div>
+        <div class="rank-box-item"  v-for="(item,index) in UserInfo.havePublishedList" :key="index+'havePublished'">
+          <img class="goods-item-img" :src=item.detailDtoList[0].img alt="">
+          <div class="item-right-box">
+            <div>{{item.c2cItemsName}}</div>
+            <div>售出价 {{item.showPrice}} </div>
+            <div>购入价 {{item.inPrice}}</div>
+          </div>
+        </div>
+      </div>
+      <div class="rank-box">
+        <div class="rank-box-tilte">累计收益排名(品类)</div>
+        <div class="rank-box-item" v-for="(item,index) in UserInfo.sendCost" :key="index+'allCost'">
+            <img class="goods-item-img" :src=item.img alt="">
+            <div class="item-right-box">
+              <div>{{item.name}}</div>
+              <div>总成本{{(item.costInthis).toFixed(1)}} 数量 {{item.num}}</div>
+              <div>总利润 {{(item.earnings).toFixed(1)}}</div>
+            </div>
+        </div>
+      </div>
+      <div class="rank-box">
+        <div class="rank-box-tilte">累计购买排名(金额)</div>
+         <div class="rank-box-item" v-for="(item,index) in UserInfo.allCost" :key="index+'allCost'">
+            <img class="goods-item-img" :src=item.img alt="">
+            <div class="item-right-box">
+              <div>{{item.name}}</div>
+              <div>平均购入价{{item.price}} 数量 {{item.num}}</div>
+              <div>总购入 {{item.costInthis}}</div>
+            </div>
+          </div>
+      </div>
     </div>
   </div>
 </template>
@@ -39,19 +71,63 @@ function analysisAction(){
   //计算总金额
   for(let i of UserInfo.myPurchasedList){
     itemAnalysisData.allBuyMoney += Number(i.showPrice)
-    buyItemMap[i.detailDtoList[0].itemsId] = Number(i.showPrice)
+    if(buyItemMap[i.detailDtoList[0].itemsId]){
+      buyItemMap[i.detailDtoList[0].itemsId].costInthis = buyItemMap[i.detailDtoList[0].itemsId].costInthis + Number(i.showPrice)
+      buyItemMap[i.detailDtoList[0].itemsId].num++
+      buyItemMap[i.detailDtoList[0].itemsId].price = ((buyItemMap[i.detailDtoList[0].itemsId].costInthis)/buyItemMap[i.detailDtoList[0].itemsId].num).toFixed(1)
+    }else{
+      buyItemMap[i.detailDtoList[0].itemsId] = {
+        'price':Number(i.showPrice),
+        'img':i.detailDtoList[0].img,
+        'costInthis':Number(i.showPrice),
+        'name':i.c2cItemsName,
+        'num':1
+      }
+    }
   }
   //键值对的map 商品唯一id ： 卖的时候的价格
+  let sendItemMap = {}     
   for(let i of UserInfo.havePublishedList){
-    itemAnalysisData.downSellCost += buyItemMap[i.detailDtoList[0].itemsId]
+    itemAnalysisData.downSellCost = itemAnalysisData.downSellCost + Number(buyItemMap[i.detailDtoList[0].itemsId].price)
+    i.inPrice = Number(buyItemMap[i.detailDtoList[0].itemsId].price)
+    if(sendItemMap[i.detailDtoList[0].itemsId]){
+      sendItemMap[i.detailDtoList[0].itemsId].earnings = sendItemMap[i.detailDtoList[0].itemsId].earnings + Number(i.showPrice) - i.inPrice
+      sendItemMap[i.detailDtoList[0].itemsId].costInthis += i.inPrice 
+      sendItemMap[i.detailDtoList[0].itemsId].num++
+      
+    }else{
+      sendItemMap[i.detailDtoList[0].itemsId] = {
+        'earnings':Number(i.showPrice) - i.inPrice,
+        'img':i.detailDtoList[0].img,
+        'costInthis':i.inPrice,
+        'name':i.c2cItemsName,
+        'num':1
+      }
+    }
   }
   //已经卖出的金额
   itemAnalysisData.downSellMoney = Number(UserInfo.myInfo.income)
   //在卖的商品的金额
   for(let i of UserInfo.myPublishList){
     itemAnalysisData.nowSellMoney += Number(i.showPrice)
-    itemAnalysisData.nowSellCost += buyItemMap[i.detailDtoList[0].itemsId]
+    itemAnalysisData.nowSellCost += buyItemMap[i.detailDtoList[0].itemsId].price
   }
+  //把累计的map转成数组排序
+  let arrary = []
+  for(let i in buyItemMap){
+    arrary.push(buyItemMap[i])
+  }
+  UserInfo.allCost = arrary.sort((a,b)=>{
+    return b.costInthis - a.costInthis
+  })
+  //把卖的map转成数组排序
+  let sendArrary = []
+  for(let i in sendItemMap){
+    sendArrary.push(sendItemMap[i])
+  }
+  UserInfo.sendCost = sendArrary.sort((a,b)=>{
+    return b.earnings - a.earnings
+  })
 
 }
 interface UserInfo {
@@ -59,12 +135,16 @@ interface UserInfo {
   myPublishList:[];
   myPurchasedList:[];
   havePublishedList:[];
+  allCost:[],  
+  sendCost:[] 
 }
 const UserInfo : UserInfo = reactive({
   myInfo:{},
   myPublishList:[],     //在卖的
   myPurchasedList:[],   //总购买的
   havePublishedList:[],   //卖完的
+  allCost:[],   //合并累计
+  sendCost:[] 
 })
 const itemAnalysisData = reactive({
   allBuyMoney:0,  //总购买的金额
@@ -113,7 +193,7 @@ function getMyPublish(){
     success: function (res) {
       if(res.code == 0){
         UserInfo.myPublishList = res.data.list
-        getMyPurchasedItems()
+        getMyPurchasedItems(1)
       }
     },
     error:function (res) {
@@ -121,10 +201,10 @@ function getMyPublish(){
     }
   });
 }
-function getMyPurchasedItems(){
+function getMyPurchasedItems(pageNumber : number){
   $.ajax({
     type: "GET",
-    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPurchasedItems?pageSize=150&pageNo=1`,
+    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPurchasedItems?pageSize=150&pageNo=${pageNumber}`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
@@ -135,8 +215,13 @@ function getMyPurchasedItems(){
     },
     success: function (res) {
       if(res.code == 0){
-        UserInfo.myPurchasedList = res.data.list
-        analysisAction()
+        UserInfo.myPurchasedList = UserInfo.myPurchasedList.concat(res.data.list) 
+        if(UserInfo.myPurchasedList.length < res.data.total){
+          getMyPurchasedItems(pageNumber + 1)
+        }else{
+          console.log(UserInfo.myPurchasedList.length)
+          analysisAction()
+        }
       }
     },
     error:function (res) {
@@ -204,6 +289,39 @@ function checkCookie(objname : string){     //获取指定名称的cookie的值
     background-color: white;
     height: calc(100% - 120px);
     overflow-y: scroll;
+    display: flex;
+    padding: 24px;
+    .goods-item-img{
+      width: 25%;
+      height: auto;
+    }
+    .rank-box{
+      width: 33%;
+      text-align: center;
+      border-right: 2px solid rgb(235,235,235);
+      .rank-box-tilte{
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .rank-box-item{
+        border-bottom: 1px solid rgb(235,235,235);
+        margin-bottom: 6px;
+        display: flex;
+        padding: 12px 24px;
+        justify-content: space-between;
+        * > div{
+          margin-bottom: 6px;
+        }
+        .item-right-box{
+          display: flex;
+          width: 60%;
+          flex-direction: column;
+          justify-content: space-around;
+
+        }
+      }
+    }
   }
 }
 

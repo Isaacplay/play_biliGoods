@@ -50,7 +50,11 @@ function exportList(){
   arrary = arrary.sort((a,b)=>{
     return a.name.localeCompare(b.name)
   })
-  console.log(arrary)
+  let Fmap = {}
+  for(let i of arrary){
+    Fmap[i.itemsId] = i
+  }
+  console.log(Fmap)
 }
 interface searchAbout {
   starList: any[];
