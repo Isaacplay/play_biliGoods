@@ -88,15 +88,22 @@ function analysisAction(){
   //键值对的map 商品唯一id ： 卖的时候的价格
   let sendItemMap = {}     
   for(let i of UserInfo.havePublishedList){
-    itemAnalysisData.downSellCost = itemAnalysisData.downSellCost + Number(buyItemMap[i.detailDtoList[0].itemsId].price)
-    i.inPrice = Number(buyItemMap[i.detailDtoList[0].itemsId].price)
-    if(sendItemMap[i.detailDtoList[0].itemsId]){
-      sendItemMap[i.detailDtoList[0].itemsId].earnings = sendItemMap[i.detailDtoList[0].itemsId].earnings + Number(i.showPrice) - i.inPrice
-      sendItemMap[i.detailDtoList[0].itemsId].costInthis += i.inPrice 
-      sendItemMap[i.detailDtoList[0].itemsId].num++
-      
+    let allInPrice = 0
+    let itemsIdList = []
+    for(let k of i.detailDtoList){
+      allInPrice += Number(buyItemMap[k.itemsId].price)
+      itemsIdList.push(k.itemsId)
+    }
+    itemAnalysisData.downSellCost = itemAnalysisData.downSellCost + allInPrice
+    i.inPrice = allInPrice
+    itemsIdList = itemsIdList.sort()
+    let keyIds = itemsIdList.join(',')
+    if(sendItemMap[keyIds]){
+      sendItemMap[keyIds].earnings = sendItemMap[keyIds].earnings + Number(i.showPrice) - i.inPrice
+      sendItemMap[keyIds].costInthis += i.inPrice 
+      sendItemMap[keyIds].num++
     }else{
-      sendItemMap[i.detailDtoList[0].itemsId] = {
+      sendItemMap[keyIds] = {
         'earnings':Number(i.showPrice) - i.inPrice,
         'img':i.detailDtoList[0].img,
         'costInthis':i.inPrice,

@@ -46,6 +46,10 @@ export default defineConfig({
             target: 'http://xwthome.top:8989/', // 代理的目标地址
             changeOrigin: true, // 开发模式，默认的origin是真实的 origin:localhost:3000 代理服务会把origin修改为目标地址
         },
+        '/biligoods/getBiligoodsById': { // 匹配请求路径，localhost:3000/snow
+            target: 'http://111.229.88.32:3000/', // 代理的目标地址
+            changeOrigin: true, // 开发模式，默认的origin是真实的 origin:localhost:3000 代理服务会把origin修改为目标地址
+        },
         // '/mall-magic-c/internet/c2c/v2/list':{
         //   target: 'https://mall.bilibili.com/', // 代理的目标地址
         //     changeOrigin: true, // 开发模式，默认的origin是真实的 origin:localhost:3000 代理服务会把origin修改为目标地址

@@ -7,33 +7,33 @@
     <div class="contant">
       <div class="left-con"></div>
       <div class="main-con">
-        <biligoods v-if="homePage.flag == 'biliGoods'"></biligoods>
-        <favorites v-if="homePage.flag == 'Favorites'"></favorites>
-        <me v-if="homePage.flag == 'Me'"></me>
-        <setting v-if="homePage.flag == 'Setting'"></setting>
-        <shop v-if="homePage.flag == 'Shop'"></shop>
+        <component :is="tab"></component>
       </div>
       <div class="right-con"></div>
     </div>
     <div class="bottom-con">
       <div class="box">
-        <div :class="homePage.flag == 'biliGoods'?'icon-con max-img':'icon-con'" @click="changeToFlag('biliGoods')">
+        <div :class="homePage.flag == 'biligoods'?'icon-con max-img':'icon-con'" @click="changeToFlag('biligoods')">
           <img  src="@/assets/icon/home.png"/>
           <div>首页</div>
         </div>
-        <div :class="homePage.flag == 'Favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('Favorites')">
+        <div :class="homePage.flag == 'biliShop'?'icon-con max-img':'icon-con'" @click="changeToFlag('biliShop')">
+          <img  src="@/assets/icon/Myhome.png"/>
+          <div>分析</div>
+        </div>
+        <div :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
           <img src="@/assets/icon/fav.png"/>
           <div>收藏夹</div>
         </div>
-        <div :class="homePage.flag == 'Shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('Shop')">
+        <div :class="homePage.flag == 'shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('shop')">
           <img src="@/assets/icon/shopping.png"/>
           <div>橱窗</div>
         </div>
-        <div :class="homePage.flag == 'Me'?'icon-con max-img':'icon-con'" @click="changeToFlag('Me')">
+        <div :class="homePage.flag == 'me'?'icon-con max-img':'icon-con'" @click="changeToFlag('me')">
           <img src="@/assets/icon/me.png"/>
           <div>统计</div>
         </div>
-        <div :class="homePage.flag == 'Setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('Setting')">
+        <div :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
           <img src="@/assets/icon/setting.png"/>
           <div>设置</div>
         </div>
@@ -42,18 +42,35 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive,nextTick } from 'vue'
+import { reactive,markRaw,ref,onMounted} from 'vue'
 import {useRoute,useRouter} from 'vue-router'
+import biliShop from './biliShop/index.vue'
 import biligoods from './biligoods/index.vue'
 import favorites from './favorites/favorites.vue'
 import me from './me/me.vue'
 import setting from './setting/setting.vue'
 import shop from './shop/shop.vue'
+
+const tab = ref(null)
+const route = useRoute()
+
 const homePage = reactive({
-  flag:'biliGoods',
+  flag:'biligoods',
 })
+
+onMounted(() => {
+  changeToFlag('biligoods')
+  if(route.query.id && route.query.id.length > 0){
+    changeToFlag('biliShop')
+  }
+})
+
 function changeToFlag(flag : string){
   homePage.flag = flag
+  const lookup = {
+    biligoods,favorites,me,setting,shop,biliShop
+  }
+  tab.value = markRaw(lookup[flag])
 }
 </script>
 <style lang="scss" scoped>
