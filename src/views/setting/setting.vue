@@ -41,6 +41,7 @@ import { ElMessage  } from 'element-plus'
 const haveCookie = ref(false)
 const setting = reactive({
   urlList:[
+    {value:'http://111.229.88.32:3000/biligoods/getBiligoodslist'},
     {value:'http://localhost:7777/play_biligoods/api'},
     {value:'https://mall.bilibili.com'},
     {value:'http://111.229.88.32:7777/play_biligoods/api'},

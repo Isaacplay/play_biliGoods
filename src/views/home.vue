@@ -21,6 +21,10 @@
           <img  src="@/assets/icon/Myhome.png"/>
           <div>分析</div>
         </div>
+        <div :class="homePage.flag == 'lost'?'icon-con max-img':'icon-con'" @click="changeToFlag('lost')">
+          <img  src="@/assets/icon/lost.png"/>
+          <div>耻辱榜</div>
+        </div>
         <div :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
           <img src="@/assets/icon/fav.png"/>
           <div>收藏夹</div>
@@ -50,6 +54,7 @@ import favorites from './favorites/favorites.vue'
 import me from './me/me.vue'
 import setting from './setting/setting.vue'
 import shop from './shop/shop.vue'
+import lost from './lost/lost.vue'
 
 const tab = ref(null)
 const route = useRoute()
@@ -68,7 +73,7 @@ onMounted(() => {
 function changeToFlag(flag : string){
   homePage.flag = flag
   const lookup = {
-    biligoods,favorites,me,setting,shop,biliShop
+    biligoods,favorites,me,setting,shop,biliShop,lost
   }
   tab.value = markRaw(lookup[flag])
 }

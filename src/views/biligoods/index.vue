@@ -3,13 +3,17 @@
     <div class="filter-header">
       <div class="filter-header-top">
         <div class="filter-header-left">
-          <div v-if="haveCookie" class="filter-item">
+          <!-- <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">类型:</div>
             <el-select v-model="categoryFilter" clearable class="m-2 w120" placeholder="Select" size="default">
               <el-option v-for="item in categoryFilterList" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
-          </div>
+          </div> -->
           <div class="filter-item">
+            <div class="filter-name">名称:</div>
+            <el-input class="w240" v-model="nodeSearch.name" />
+          </div>
+          <!-- <div class="filter-item">
             <div class="filter-name">排序:</div>
             <el-select v-model="sortType" clearable class="m-2 w120" placeholder="Select" size="default">
               <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label" :value="item.value" />
@@ -20,19 +24,19 @@
             <el-select v-model="priceFilters" multiple clearable class="m-2" placeholder="Select" size="default">
               <el-option v-for="item in priceFiltersList" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
-          </div>
-          <div v-if="haveCookie" class="filter-item">
+          </div> -->
+          <!-- <div v-if="haveCookie" class="filter-item">
             <div class="filter-name">折扣:</div>
             <el-select v-model="discountFilters" multiple clearable class="m-2 w120" placeholder="Select" size="default">
               <el-option v-for="item in discountFiltersList" :key="item.value" :label="item.label" :value="item.value"/>
             </el-select>
-          </div>
+          </div> -->
         </div>
         <div class="filter-header-right">
           <el-input-number v-model="step" :step="10" :min="10" :max="4000" controls-position="right" step-strictly />
           <el-button color="#626aef" @click="search">查询</el-button>
           <el-button color="#626aef"  plain @click="reset">重置</el-button>
-          <el-button color="#626aef"  plain @click="likeWater">流水刷新</el-button>
+          <!-- <el-button color="#626aef"  plain @click="likeWater">流水刷新</el-button> -->
           <!-- <el-button color="#626aef"  plain @click="showStarList">收藏夹</el-button> -->
         </div>
       </div>
@@ -52,7 +56,7 @@
         <div>
           <div v-if="searchAbout.keyMap[item.itemsId]">收藏夹最低价：{{ searchAbout.keyMap[item.itemsId] }}</div>
           <div v-if="searchAbout.lowestMap[item.itemsId]">历史搜索最低价：{{ searchAbout.lowestMap[item.itemsId] }}</div>
-          <img class="goods-item-img" :src=item.img alt="">
+          <img class="goods-item-img" style="cursor:pointer ;" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
           <div>{{item.name}}</div>
           <div v-if="item.list.length > 0">
             <el-collapse>
@@ -259,6 +263,9 @@ function addToStar(item : starMap){
   ElMessage.success('添加到收藏夹成功！')
   analysisStar()
 }
+function openAnalysis(itemId : String){
+  window.open(`http://111.229.88.32:7777/play_biligoods/#/?id=${itemId}`)
+}
 function openUrl(itemId : String){
     window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)
 }
@@ -268,6 +275,8 @@ function search(){
   searchAbout.nextId = ''
   searchAbout.inSearch = true
   searchAbout.allStep = step.value
+  nodeSearch.size = step.value
+  nodeSearch.page = 1
   searchAbout.goodsList =[]
   bilibiliGoodsSearch()
 }
@@ -333,6 +342,10 @@ function getLowPrice(list : any){
   return low + '~' + high
 }
 function bilibiliGoodsSearch(){
+  if(settingMap.biligoods.url == 'http://111.229.88.32:3000/biligoods/getBiligoodslist'){
+    biliNodeSearch()
+    return
+  }
   let data = {
     nextId:searchAbout.nextId.length == 0?null:searchAbout.nextId,
     categoryFilter:categoryFilter.value,
@@ -413,6 +426,77 @@ function bilibiliGoodsSearch(){
         //   bilibiliGoodsSearch()
         // },10000)
       }
+    },
+    error:function (res) {
+      console.log(res)
+    }
+  });
+}
+
+interface nodeSearch {
+  page: number;
+  size: number;
+  name: string;
+}
+const nodeSearch : nodeSearch = reactive({
+  page:1,
+  size:500,
+  name:''
+})
+
+function biliNodeSearch(){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/biligoods/getBiligoodslist?page=${nodeSearch.page}&size=${nodeSearch.size}&name=${nodeSearch.name}`,
+    timeout: 20000,
+    success: function (res) {
+      //精简内容 优化 数组
+      res = res.map((item : any)=>{
+          let breakNewPrice = false
+          let itemsId = item.categoryId.split(',')
+          itemsId = itemsId.sort()
+          if(itemsId.length == 1){
+            let key = itemsId[0]
+            if(searchAbout.lowestMap[key]){
+              if(Number(item.showPrice) < Number(searchAbout.lowestMap[key])){
+                searchAbout.lowestMap[key] = Number(item.showPrice)
+                breakNewPrice = true
+              }
+            }else{
+              searchAbout.lowestMap[key] = Number(item.showPrice)
+            }
+          }else{
+            let all = 0
+            for(let i of itemsId){
+              let price = searchAbout.lowestMap[i] || 0
+              all += Number(price)
+            }
+            if(Number(item.showPrice) < Number(all)){
+              breakNewPrice = true
+            }
+          }
+          return{
+            name:item.name,
+            icon:item.img,
+            itemsId:itemsId,
+            price:item.price,
+            breakNewPrice:breakNewPrice,
+            id:item._id
+          }
+        })
+        let arrary = searchAbout.goodsList
+        arrary = arrary.concat(res)
+        let obj = {};
+        arrary = arrary.reduce((cur,next) => {
+            obj[next.id] ? "" : obj[next.id] = true && cur.push(next);
+            return cur;
+        },[])
+        searchAbout.goodsList = arrary
+        searchAbout.now_step += res.length
+        nodeSearch.page ++
+        analysisAction()
+        localStorage.setItem("lowestMap",JSON.stringify(searchAbout.lowestMap));
+      
     },
     error:function (res) {
       console.log(res)

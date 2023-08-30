@@ -24,7 +24,7 @@
         <div class="analysis-item" v-for="(item,index) in searchAbout.goodsList" :key="index">
           <div class="index">{{ index + 1 }}</div>
           <div class="price click-span" @click="openUrl(item._id)">{{ item.price }}</div>
-          <div class="status" @click="openUrl(item._id)">{{ item.status || '' }}</div>
+          <div class="status" :style="{'color':item.color}" @click="openUrl(item._id)">{{ item.status || '' }}</div>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ interface searchAbout {
 const searchAbout : searchAbout = reactive({
   goodsList:[],
   img:'',
-  id:'1000277750',
+  id:'1000381740',
   name:'',
   index:0,
   limit:0
@@ -78,10 +78,13 @@ function getStatusInfo(index : Number){
       if(res.code == 0){
         if(res.data.publishStatus == '2'){
           searchAbout.goodsList[index].status = '下架'
+          searchAbout.goodsList[index].color = 'gray'
         }else if(res.data.saleStatus == '1'){
           searchAbout.goodsList[index].status = '在卖'
+          searchAbout.goodsList[index].color = 'green'
         }else if(res.data.saleStatus == '2'){
           searchAbout.goodsList[index].status = '卖掉了'
+          searchAbout.goodsList[index].color = 'red'
         }
         if(searchAbout.index < searchAbout.limit){
           searchAbout.index++
@@ -153,6 +156,22 @@ function init() {
     yAxis: {
       type: 'value'
     },
+    dataZoom: [
+      {
+          type: 'inside',
+          show: true,
+          xAxisIndex: [0],
+          start: 70,
+          end: 100
+      },
+      {
+          type: 'inside',
+          show: true,
+          yAxisIndex: [0],
+          start: 1,
+          end: 100
+      },
+    ],
     series: [
       {
         data: value,
