@@ -5,6 +5,8 @@
         <div class="filter-item">
           <div class="filter-name">ID:</div>
           <el-input style="margin-right: 24px;" v-model="searchAbout.id" />
+          <el-button  @click="sortByTime">时间</el-button>
+          <el-button  @click="sortByPrice">价格</el-button>
         </div>
       </div>
       <div class="filter-header-right">
@@ -22,7 +24,7 @@
       </div>
       <div class="analysis-box">
         <div class="analysis-item" v-for="(item,index) in searchAbout.goodsList" :key="index">
-          <div class="index">{{ index + 1 }}</div>
+          <div :class="searchAbout.index == index ? 'index-selected' : 'index'" @click="changeIndexTothis(index)">{{ index + 1 }}</div>
           <div class="price click-span" @click="openUrl(item._id)">{{ item.price }}</div>
           <div class="status" :style="{'color':item.color}" @click="openUrl(item._id)">{{ item.status || '' }}</div>
         </div>
@@ -65,8 +67,12 @@ const searchAbout : searchAbout = reactive({
 })
 
 function checkStatus(){
-  searchAbout.limit += 10
+  searchAbout.limit = searchAbout.index + 15
   getStatusInfo(searchAbout.index)
+}
+
+function changeIndexTothis(index : number){
+  searchAbout.index = index
 }
 
 function getStatusInfo(index : Number){
@@ -88,7 +94,9 @@ function getStatusInfo(index : Number){
         }
         if(searchAbout.index < searchAbout.limit){
           searchAbout.index++
-          getStatusInfo(searchAbout.index)
+          setTimeout(()=>{
+            getStatusInfo(searchAbout.index)
+          },500)
         }else{
 
         }
@@ -123,6 +131,18 @@ function getItemsByid(){
       console.log(res)
     }
   });
+}
+
+function sortByTime(){
+  searchAbout.goodsList.sort((a,b)=>{
+    return  b.time - a.time
+  })
+}
+
+function sortByPrice(){
+  searchAbout.goodsList.sort((a,b)=>{
+    return a.price - b.price
+  })
 }
 
 function init() {
@@ -250,7 +270,16 @@ function openUrl(itemId : String){
           font-weight: 16;
           font-size: 18px;
           margin-right: 6px;
+          cursor: pointer;
           // width: 20%;
+          text-align: center;
+        }
+        .index-selected{
+          font-weight: 16;
+          font-size: 20px;
+          margin-right: 6px;
+          cursor: pointer;
+          color: red;
           text-align: center;
         }
         .price{

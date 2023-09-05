@@ -61,8 +61,7 @@ onMounted(() => {
     settingMap.me = map.me
   }
   if(haveCookie.value){
-    getMyUserInfo()
-    getSelledList()
+    getSelledList(1)
   }
 })
 function analysisAction(){
@@ -91,7 +90,12 @@ function analysisAction(){
     let allInPrice = 0
     let itemsIdList = []
     for(let k of i.detailDtoList){
-      allInPrice += Number(buyItemMap[k.itemsId].price)
+      //出现可能是自己抽的商品 就算0成本吧 （摊手
+      if(buyItemMap[k.itemsId]){
+        allInPrice += Number(buyItemMap[k.itemsId].price)
+      }else{
+        allInPrice += Number(i.showPrice)
+      }
       itemsIdList.push(k.itemsId)
     }
     itemAnalysisData.downSellCost = itemAnalysisData.downSellCost + allInPrice
@@ -236,10 +240,10 @@ function getMyPurchasedItems(pageNumber : number){
     }
   });
 }
-function getSelledList(){
+function getSelledList(pageNumber : number){
   $.ajax({
     type: "GET",
-    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPublish?pageSize=200&pageNo=1&filterType=2`,
+    url: `${settingMap.me.url}/mall-magic-c/internet/c2c/items/pageQueryMyPublish?pageSize=200&pageNo=${pageNumber}&filterType=2`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
@@ -250,7 +254,12 @@ function getSelledList(){
     },
     success: function (res) {
       if(res.code == 0){
-        UserInfo.havePublishedList = res.data.list
+        UserInfo.havePublishedList = UserInfo.havePublishedList.concat(res.data.list) 
+        if(UserInfo.havePublishedList.length < res.data.total){
+          getSelledList(pageNumber + 1)
+        }else{
+          getMyUserInfo()
+        }
       }
     },
     error:function (res) {

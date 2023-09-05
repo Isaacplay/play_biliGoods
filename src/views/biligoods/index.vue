@@ -33,7 +33,7 @@
           </div> -->
         </div>
         <div class="filter-header-right">
-          <el-input-number v-model="step" :step="10" :min="10" :max="4000" controls-position="right" step-strictly />
+          <el-input-number v-model="step" :step="10" :min="10" controls-position="right" step-strictly />
           <el-button color="#626aef" @click="search">查询</el-button>
           <el-button color="#626aef"  plain @click="reset">重置</el-button>
           <!-- <el-button color="#626aef"  plain @click="likeWater">流水刷新</el-button> -->
@@ -43,7 +43,7 @@
       <div v-show="searchAbout.inSearch" class="search-more">
           <div class="search-front">Total : {{searchAbout.allStep}},Now : {{searchAbout.now_step}}</div>
           <div v-show="searchAbout.allStep == searchAbout.now_step">
-            <el-input-number style="margin-right: 24px;" v-model="addStep" :step="10" :min="10" :max="2000" controls-position="right" step-strictly />
+            <el-input-number style="margin-right: 24px;" v-model="addStep" :step="10" :min="10"  controls-position="right" step-strictly />
             <el-button style="margin-right: 24px;" color="#626aef" @click="addSearch">追加</el-button>
           </div>
           <el-button v-show="searchAbout.allStep == searchAbout.now_step" color="#626aef"  plain @click="clear">重新搜索</el-button>
@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { ref,reactive ,onMounted} from 'vue'
 import { ElMessage  } from 'element-plus'
-const addStep = ref(10)
+const addStep = ref(2000)
 const stopWater = ref(false)
 const haveCookie = ref(false)
 let settingMap = reactive({
@@ -555,7 +555,7 @@ const discountFiltersList = [
   {value:'50-70',label:'5-7折'},
   {value:'70-100',label:'7折以上'},
 ]
-const step = ref(20)
+const step = ref(2000)
 </script>
 <style scoped>
 .click-span{
