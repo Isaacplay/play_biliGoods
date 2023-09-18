@@ -31,7 +31,7 @@ export default defineConfig({
     }
   },
   server:{
-    // host: '0.0.0.0',//自定义主机名
+    host: '0.0.0.0',//自定义主机名
 		port: 7777,//自定义端口
     proxy: {
         '/api/trans/vip/translate': { // 匹配请求路径，localhost:3000/snow
