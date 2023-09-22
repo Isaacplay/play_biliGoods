@@ -91,7 +91,7 @@
 </template>
 <script setup lang="ts">
 import { ref,reactive ,onMounted} from 'vue'
-import { ElMessage  } from 'element-plus'
+import { ElMessage , ElLoading  } from 'element-plus'
 const addStep = ref(2000)
 const stopWater = ref(false)
 const haveCookie = ref(false)
@@ -105,10 +105,10 @@ onMounted(() => {
   document.onkeydown=function(e){    //对整个页面监听  
     var keyNum=window.event ? e.keyCode :e.which;       //获取被按下的键值  
     // console.log(keyNum)
-    if(keyNum==70){  
-      search()
-    } 
-    stopWater.value = true
+    // if(keyNum==70){  
+    //   search()
+    // } 
+    // stopWater.value = true
   }
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   analysisStar()  //生成收藏夹
@@ -445,11 +445,17 @@ const nodeSearch : nodeSearch = reactive({
 })
 
 function biliNodeSearch(){
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
   $.ajax({
     type: "GET",
     url: `http://111.229.88.32:3000/biligoods/getBiligoodslist?page=${nodeSearch.page}&size=${nodeSearch.size}&name=${nodeSearch.name}`,
     timeout: 20000,
     success: function (res) {
+      loading.close()
       //精简内容 优化 数组
       res = res.map((item : any)=>{
           let breakNewPrice = false
@@ -499,6 +505,7 @@ function biliNodeSearch(){
       
     },
     error:function (res) {
+      loading.close()
       console.log(res)
     }
   });

@@ -6,16 +6,20 @@
       <div class="filter-header-right">
       </div>
     </div>
-    <div class="goods-box">
+    <div v-if="haveCookie" class="goods-box">
         <div class="goods-item" v-for="(item,index) in UserInfo.lastArrary" :key="index">
           <div>
-            <img class="goods-item-img" :src=item.img alt="">
+            <img class="goods-item-img" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
             <div>{{item.name}}</div>
             <div style="white-space: nowrap;">
               <span v-for="(item2) in item.list" :key="item2.id" class="click-span" @click="openUrl(item2.id)">{{ item2.price }} </span>
             </div>
           </div>
       </div>
+    </div>
+    <div class="me-box-nocookie" v-else>
+      <img class="tip-img" src="@/assets/img/tip.jpg" alt="">
+      <div class="tip-box">没有cookie呢，去【设置】里面添加cookie吧</div>
     </div>
   </div>
 </template>
@@ -31,9 +35,17 @@ let settingMap = reactive({
 
 interface UserInfo {
   myPublishList:[];
-  lastArrary:[],
+  lastArrary:{
+    name: any;
+    list: any;
+    itemsId:string,
+    id:any;
+    img: any;
+    price: string;
+  }[],
   keyMap:{}
 }
+
 const UserInfo : UserInfo = reactive({
   myPublishList:[],     //在卖的
   lastArrary:[],
@@ -50,6 +62,10 @@ onMounted(() => {
     getMyPublish()
   }
 })
+
+function openAnalysis(itemId : String){
+  window.open(`http://111.229.88.32:7777/play_biligoods/#/?id=${itemId}`)
+}
 
 function openUrl(itemId : String){
     window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)
@@ -111,8 +127,8 @@ function getMyPublish(){
     },
     success: function (res) {
       if(res.code == 0){
-        UserInfo.myPublishList = res.data.list.map((item)=>{
-          let itemsId = item.detailDtoList.map((itema)=>{
+        UserInfo.myPublishList = res.data.list.map((item : any)=>{
+          let itemsId = item.detailDtoList.map((itema : any)=>{
               return itema.skuId
           })
           item.itemsId = itemsId.sort().join(',')
@@ -225,5 +241,24 @@ function checkCookie(objname : string){     //获取指定名称的cookie的值
   color: #409eff;
   margin-right: 6px;
 }
+.me-box-nocookie{
+    background-color: white;
+    height: calc(100% - 120px);
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    .tip-img{
+      width: 50%;
+      height: auto;
+      margin-bottom: 30px;
+    }
+    .tip-box{
+      font-size: 24px;
+      font-weight: 600;
+    }
+  }
 
 </style>

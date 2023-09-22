@@ -13,7 +13,7 @@
     </div>
     <div class="bottom-con">
       <div class="box">
-        <div :class="homePage.flag == 'biligoods'?'icon-con max-img':'icon-con'" @click="changeToFlag('biligoods')">
+        <div v-show="!isMobile" :class="homePage.flag == 'biligoods'?'icon-con max-img':'icon-con'" @click="changeToFlag('biligoods')">
           <img  src="@/assets/icon/home.png"/>
           <div>首页</div>
         </div>
@@ -21,11 +21,11 @@
           <img  src="@/assets/icon/Myhome.png"/>
           <div>分析</div>
         </div>
-        <div :class="homePage.flag == 'lost'?'icon-con max-img':'icon-con'" @click="changeToFlag('lost')">
+        <div v-show="!isMobile" :class="homePage.flag == 'lost'?'icon-con max-img':'icon-con'" @click="changeToFlag('lost')">
           <img  src="@/assets/icon/lost.png"/>
           <div>耻辱榜</div>
         </div>
-        <div :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
+        <div v-show="!isMobile" :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
           <img src="@/assets/icon/fav.png"/>
           <div>收藏夹</div>
         </div>
@@ -33,11 +33,15 @@
           <img src="@/assets/icon/shopping.png"/>
           <div>橱窗</div>
         </div>
-        <div :class="homePage.flag == 'me'?'icon-con max-img':'icon-con'" @click="changeToFlag('me')">
+        <!-- <div v-show="isMobile" :class="homePage.flag == 'shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('mobileShop')">
+          <img src="@/assets/icon/shopping.png"/>
+          <div>橱窗</div>
+        </div> -->
+        <div v-show="!isMobile" :class="homePage.flag == 'me'?'icon-con max-img':'icon-con'" @click="changeToFlag('me')">
           <img src="@/assets/icon/me.png"/>
           <div>统计</div>
         </div>
-        <div :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
+        <div v-show="!isMobile" :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
           <img src="@/assets/icon/setting.png"/>
           <div>设置</div>
         </div>
@@ -56,8 +60,13 @@ import setting from './setting/setting.vue'
 import shop from './shop/shop.vue'
 import lost from './lost/lost.vue'
 
-const tab = ref(null)
+const tab  = ref(null as any)
+const isMobile  = ref(false)
 const route = useRoute()
+
+interface lookup {
+    [key: string]: object, 
+}; 
 
 const homePage = reactive({
   flag:'biligoods',
@@ -68,34 +77,49 @@ onMounted(() => {
   if(route.query.id && route.query.id.length > 0){
     changeToFlag('biliShop')
   }
+  getWindowSize()
 })
 
 function changeToFlag(flag : string){
   homePage.flag = flag
-  const lookup = {
+  const lookup : lookup = {
     biligoods,favorites,me,setting,shop,biliShop,lost
   }
   tab.value = markRaw(lookup[flag])
 }
+
+function getWindowSize(){
+  let w = window.innerWidth
+  if(w < 600){
+    isMobile.value = true
+    changeToFlag('biliShop')
+  }
+}
 </script>
 <style lang="scss" scoped>
+@media screen and (max-width: 600px){
+  .main-con,.bottom-con{
+    width: 100% !important;
+  }
+  .right-con,.left-con{
+    width: 0px !important;
+    display: none !important;
+  }
+}
 .container{
   width: 100%;
   height: 100%;
   font-size: 14px;
-  background-color: rgb(235,235,235);
+  // background-color: rgb(235,235,235);
+  background-color: rgba(222,71,42,1);
   position: relative;
-  // background-image: url('@/assets/imgs/top_bar.jpg');
-  // background-position: top;
-  // background-size: contain;
-  // background-repeat: no-repeat;
   .top-header{
     width: 100%;
     height: 120px;
-    background-color: #66ccff;
+    background-color: #F6AD62;
     position: relative;
     // z-index: 5;
-    // background-image: url('@/assets/imgs/top_bar.jpg');
+    // background-image: url('@/assets/background/top_bar.jpg');
     // background-position: top;
     // background-size: contain;
     // background-repeat: no-repeat;
@@ -125,22 +149,31 @@ function changeToFlag(flag : string){
     display: flex;
     height: calc(100% - 120px);
     .main-con{
-      width: 80%;
+      width: 70%;
       transform: translateY(-120px);
       height: calc(100% + 40px);
       overflow: scroll;
     }
     .left-con{
-      width: 10%;
+      width: 15%;
+      background-image: url('@/assets/background/eleysia_left.jpg');
+      background-position: top;
+      background-size: contain;
+      background-repeat: no-repeat;
     }
     .right-con{
-      width: 10%;
+      width: 15%;
+      background-image: url('@/assets/background/eleysia_left.jpg');
+      background-position: top;
+      background-size: contain;
+      background-repeat: no-repeat;
+      transform: rotateY(180deg);
     }
   }
   .bottom-con{
     position: absolute;
     bottom: 0;
-    width: 80%;
+    width: 70%;
     left: 10%;
     height: 80px;
     display: flex;

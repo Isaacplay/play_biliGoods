@@ -32,6 +32,18 @@
           />
         </div>
       </div>
+      <div class="setting-item">
+        <div class="title">COOKIE</div>
+        <div class="setting-filter">
+          <el-input
+            v-model="cookie"
+            type="textarea"
+            :rows="10"
+            clearable
+            class="w960"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -57,7 +69,10 @@ let settingMap = reactive({
   }
 })
 
+let cookie = ref('')
+
 onMounted(() => {
+  cookie.value = document.cookie
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   if(localStorage.getItem("settingMap")){
     let map  = JSON.parse(localStorage.getItem("settingMap") || "{}") ;   //获取设置
@@ -84,8 +99,19 @@ interface RestaurantItem {
 
 function saveAction(){
   localStorage.setItem("settingMap",JSON.stringify(settingMap));
+  UpdateCookies(cookie.value)
   ElMessage.success('保存成功！')
 }
+function UpdateCookies(cookies : string){
+  let datas = cookies.split(";");
+  let now = new Date();
+  now.setMonth( now.getMonth() + 1 );
+  for(let i = 0;i < datas.length;i++){
+    document.cookie = datas[i] + ";expires=" + now.toUTCString() + ";";
+  }
+  console.log('set cookie success')
+}
+
 function checkCookie(objname : string){     //获取指定名称的cookie的值
   var arrstr = document.cookie.split("; ");
   for(var i = 0;i < arrstr.length;i ++){

@@ -7,7 +7,7 @@
       <div class="header-item"><div class="left-name">待售商品总金额：</div><div class="value">{{itemAnalysisData.nowSellMoney.toFixed(2)}}</div></div>
       <div class="header-item"><div class="left-name">预期总利润：</div><div class="value">{{(itemAnalysisData.nowSellMoney + itemAnalysisData.downSellMoney - itemAnalysisData.allBuyMoney).toFixed(2) }}</div></div>
     </div>
-    <div class="me-box">
+    <div v-if="haveCookie" class="me-box">
       <div class="rank-box">
         <div class="rank-box-tilte">最近售出商品</div>
         <div class="rank-box-item"  v-for="(item,index) in UserInfo.havePublishedList" :key="index+'havePublished'">
@@ -41,6 +41,10 @@
             </div>
           </div>
       </div>
+    </div>
+    <div class="me-box-nocookie" v-else>
+      <img class="tip-img" src="@/assets/img/tip.jpg" alt="">
+      <div class="tip-box">没有cookie呢，去【设置】里面添加cookie吧</div>
     </div>
   </div>
 </template>
@@ -337,6 +341,25 @@ function checkCookie(objname : string){     //获取指定名称的cookie的值
 
         }
       }
+    }
+  }
+  .me-box-nocookie{
+    background-color: white;
+    height: calc(100% - 120px);
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    .tip-img{
+      width: 50%;
+      height: auto;
+      margin-bottom: 30px;
+    }
+    .tip-box{
+      font-size: 24px;
+      font-weight: 600;
     }
   }
 }

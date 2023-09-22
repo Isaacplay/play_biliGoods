@@ -5,6 +5,7 @@
         <div class="filter-item">
           <div class="filter-name">ID:</div>
           <el-input style="margin-right: 24px;" v-model="searchAbout.id" />
+          <el-input class="w120" style="margin-right: 24px;" v-model="searchAbout.page" />
           <el-button  @click="sortByTime">时间</el-button>
           <el-button  @click="sortByPrice">价格</el-button>
         </div>
@@ -37,7 +38,7 @@
 import { ref,reactive ,onMounted} from 'vue'
 import {useRoute,useRouter} from 'vue-router'
 import * as echarts from "echarts";
-import { ElMessage  } from 'element-plus'
+import { ElMessage , ElLoading  } from 'element-plus'
 
 const route = useRoute()
 const main = ref() // 使用ref创建虚拟DOM引用，使用时用main.value
@@ -53,12 +54,14 @@ interface searchAbout {
   goodsList: any[];
   img: string;
   id: string;
+  page:number;
   name: string;
   index: number;
   limit: number;
 }
 const searchAbout : searchAbout = reactive({
   goodsList:[],
+  page:500,
   img:'',
   id:'1000381740',
   name:'',
@@ -75,21 +78,24 @@ function changeIndexTothis(index : number){
   searchAbout.index = index
 }
 
-function getStatusInfo(index : Number){
+function getStatusInfo(index : keyof searchAbout['goodsList']){
   $.ajax({
     type: "GET",
     url: `https://mall.bilibili.com/mall-magic-c/internet/c2c/items/queryC2cItemsDetail?c2cItemsId=${searchAbout.goodsList[index]._id}`,
     timeout: 20000,
     success: function (res) {
       if(res.code == 0){
-        if(res.data.publishStatus == '2'){
+        if(res.data.publishStatus == '2' && res.data.saleStatus == '1'){
           searchAbout.goodsList[index].status = '下架'
           searchAbout.goodsList[index].color = 'gray'
-        }else if(res.data.saleStatus == '1'){
+        }else if(res.data.publishStatus == '1' && res.data.saleStatus == '1'){
           searchAbout.goodsList[index].status = '在卖'
           searchAbout.goodsList[index].color = 'green'
-        }else if(res.data.saleStatus == '2'){
+        }else if(res.data.publishStatus == '2' && res.data.saleStatus == '2'){
           searchAbout.goodsList[index].status = '卖掉了'
+          searchAbout.goodsList[index].color = 'red'
+        }else{
+          searchAbout.goodsList[index].status = '未知类型'
           searchAbout.goodsList[index].color = 'red'
         }
         if(searchAbout.index < searchAbout.limit){
@@ -110,11 +116,17 @@ function getStatusInfo(index : Number){
 }
 
 function getItemsByid(){
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
   $.ajax({
     type: "GET",
-    url: `http://111.229.88.32:3000/biligoods/getBiligoodsById?id=${searchAbout.id}`,
+    url: `http://111.229.88.32:3000/biligoods/getBiligoodsById?id=${searchAbout.id}&size=${searchAbout.page}`,
     timeout: 20000,
     success: function (res) {
+      loading.close()
       if(res && res.length > 0){
         searchAbout.name = res[0].name
         searchAbout.img = res[0].img
@@ -128,6 +140,7 @@ function getItemsByid(){
       init()
     },
     error:function (res) {
+      loading.close()
       console.log(res)
     }
   });
@@ -293,8 +306,12 @@ function openUrl(itemId : String){
   }
 }
 @media screen and (max-width: 600px){
+  .filter-header{
+    display: block !important;
+  }
   .filter-header-right{
-    text-align: center;
+    margin-top: 20px;
+    text-align: left !important;
   }
   .analysis-title{
     display: block !important;

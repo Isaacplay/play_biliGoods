@@ -14,6 +14,19 @@ app.use(ElementPlus)
 app.use(router)
 app.use($)
 
+if(!localStorage.getItem("settingMap")){
+  let settingMap = {
+    biligoods:{
+      url:'http://111.229.88.32:3000/biligoods/getBiligoodslist',
+    },
+    me:{
+      url:'http://111.229.88.32:7777/play_biligoods/api',
+    }
+  }
+  localStorage.setItem("settingMap",JSON.stringify(settingMap));
+  console.log('初始化 配置')
+}
+
 app.use(vue3TsJsoneditor, {
   componentName: '/JsonEditor/', // Default: 'JsonEditor',
   options: {
