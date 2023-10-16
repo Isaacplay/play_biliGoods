@@ -13,11 +13,10 @@
         <div class="goods-item" v-for="(item,index) in searchAbout.starList" :key="index">
           <div>
             <div v-if="searchAbout.lowestMap[item.itemsId]">历史搜索最低价：{{ searchAbout.lowestMap[item.itemsId] }}</div>
-            <img class="goods-item-img" :src=item.img alt="">
             <div>{{item.name}}</div>
-            <div v-for="(item2) in item.list" :key="item2.id">
-              <span class="click-span" @click="openUrl(item2.id)">{{ item2.price }} </span>
-              <span class="click-span" @click="removeFromStar(item2)"> - </span>
+            <div>{{item.price}} 
+              <span class="click-span" @click="removeFromStar(item)"> 修改 </span>
+              <span class="click-span" @click="removeFromStar(item)"> 删除 </span>
             </div>
           </div>
       </div>
@@ -32,29 +31,35 @@ const stopWater = ref(false)
 const haveCookie = ref(false)
 
 onMounted(() => {
-  analysisStar()  //生成收藏夹
   searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap") || "{}") ;   //获取最低价
+  getCheckList()
 })
 
-function exportList(){
-  analysisStar()
-  let arrary = []
-  for(let i of searchAbout.starList){
-    let map = {
-      name:i.name,
-      itemsId:i.itemsId,
-      price:Number(i.price.split('~')[0])
+function getCheckList() {
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/checkList/getCheckList`,
+    timeout: 20000,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Credentials": "true",
+    },
+    success: function (res) {
+      let map = {}
+      for (let i of res) {
+        map[i._id] = i.price
+      }
+      searchAbout.starList = res
+      searchAbout.keyMap = map
+    },
+    error: function (res) {
+      console.log(res)
     }
-    arrary.push(map)
-  }
-  arrary = arrary.sort((a,b)=>{
-    return a.name.localeCompare(b.name)
-  })
-  let Fmap = {}
-  for(let i of arrary){
-    Fmap[i.itemsId] = i
-  }
-  console.log(Fmap)
+  });
+}
+
+function exportList(){
+  console.log(map)
 }
 interface searchAbout {
   starList: any[];
@@ -73,62 +78,10 @@ const searchAbout : searchAbout = reactive({
   lowestMap:{},
 })
 function removeFromStar(item : starMap){
-  let list = JSON.parse(localStorage.getItem("starList") ) ;
-  for(let i in list){
-    if(item.id == list[i].id){
-      console.log(i)
-      list.splice(i,1)
-    }
-  }
-  localStorage.setItem("starList",JSON.stringify(list));
-  analysisStar()
-  ElMessage.success('移除收藏夹成功！')
-}
-function analysisStar(){
-  let arrary = JSON.parse(localStorage.getItem("starList") || "[]");
-  let map = {}
-  for(let i of arrary){
-    if(map[i.itemsId.join(',')] && map[i.itemsId.join(',')].length > 0){
-      map[i.itemsId.join(',')].push(i)
-    }else{
-      map[i.itemsId.join(',')] = [i]
-    }
-  } 
-  let lastArrary = []
-  let keyMap = {}
-  for(let t in map){
-    let map2 ={
-      name:map[t][0].name,
-      itemsId:t,
-      list:map[t],
-      img:map[t][0].icon,
-      id:map[t][0].id,
-      price:getLowPrice(map[t])
-    }
-    lastArrary.push(map2)
-    keyMap[t] = map2.price.split('~')[0]
-  }
-  lastArrary = lastArrary.sort((a,b)=>{
-    return a.name.localeCompare(b.name)
-  })
-  searchAbout.starList = lastArrary;
-  searchAbout.keyMap = keyMap;
+  
 }
 function openUrl(itemId : String){
     window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)
-}
-function getLowPrice(list : any){
-  let low = Number(list[0].price)
-  let high = Number(list[0].price)
-  for(let i of list){
-    if(Number(i.price) < low){
-      low = Number(i.price)
-    }
-    if(Number(i.price) > high){
-      high = Number(i.price)
-    }
-  }
-  return low + '~' + high
 }
 </script>
 <style scoped>
@@ -146,14 +99,13 @@ function getLowPrice(list : any){
   overflow-y: scroll;
 }
 .goods-item{
-  width: calc(20% - 12px);
+  width: calc(50% - 12px);
   border: 4px solid rgb(235,235,235);
-  padding: 24px 0;
+  padding: 6px 0;
   margin-right: 12px;
-  border-radius: 24px;
+  border-radius: 6px;
   margin-bottom: 24px;
   flex: 0 0 auto;
-  align-self: baseline;
   display: flex;
   flex-direction: column;
   align-items: center;

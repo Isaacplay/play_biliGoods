@@ -74,20 +74,29 @@ function analysisAction(){
   //计算总金额
   for(let i of UserInfo.myPurchasedList){
     itemAnalysisData.allBuyMoney += Number(i.showPrice)
-    if(buyItemMap[i.detailDtoList[0].itemsId]){
-      buyItemMap[i.detailDtoList[0].itemsId].costInthis = buyItemMap[i.detailDtoList[0].itemsId].costInthis + Number(i.showPrice)
-      buyItemMap[i.detailDtoList[0].itemsId].num++
-      buyItemMap[i.detailDtoList[0].itemsId].price = ((buyItemMap[i.detailDtoList[0].itemsId].costInthis)/buyItemMap[i.detailDtoList[0].itemsId].num).toFixed(1)
-    }else{
-      buyItemMap[i.detailDtoList[0].itemsId] = {
-        'price':Number(i.showPrice),
-        'img':i.detailDtoList[0].img,
-        'costInthis':Number(i.showPrice),
-        'name':i.c2cItemsName,
-        'num':1
+    let length = i.detailDtoList.length
+    let markerPrice = 0
+    for(let k of i.detailDtoList){
+      markerPrice += (k.marketPrice)
+    }
+    for(let t of i.detailDtoList){
+      let costMoney = Number(i.showPrice) * ((t.marketPrice/markerPrice))
+      if(buyItemMap[t.itemsId]){
+        buyItemMap[t.itemsId].costInthis = buyItemMap[t.itemsId].costInthis + costMoney
+        buyItemMap[t.itemsId].num++
+        buyItemMap[t.itemsId].price = ((buyItemMap[t.itemsId].costInthis)/buyItemMap[t.itemsId].num).toFixed(1)
+      }else{
+        buyItemMap[t.itemsId] = {
+          'price':costMoney,
+          'img':t.img,
+          'costInthis':costMoney,
+          'name':i.c2cItemsName,
+          'num':1
+        }
       }
     }
   }
+  console.log(buyItemMap)
   //键值对的map 商品唯一id ： 卖的时候的价格
   let sendItemMap = {}     
   for(let i of UserInfo.havePublishedList){
@@ -98,7 +107,7 @@ function analysisAction(){
       if(buyItemMap[k.itemsId]){
         allInPrice += Number(buyItemMap[k.itemsId].price)
       }else{
-        allInPrice += Number(i.showPrice)
+        allInPrice += Number((k.marketPrice/100)*0.2)
       }
       itemsIdList.push(k.itemsId)
     }
@@ -125,7 +134,9 @@ function analysisAction(){
   //在卖的商品的金额
   for(let i of UserInfo.myPublishList){
     itemAnalysisData.nowSellMoney += Number(i.showPrice)
-    itemAnalysisData.nowSellCost += buyItemMap[i.detailDtoList[0].itemsId].price
+    for(let k of i.detailDtoList){
+      itemAnalysisData.nowSellCost += buyItemMap[k.itemsId].price || Number((k.marketPrice/100)*0.2)
+    }
   }
   //把累计的map转成数组排序
   let arrary = []

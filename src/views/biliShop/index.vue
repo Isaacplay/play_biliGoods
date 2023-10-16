@@ -91,7 +91,7 @@ function getStatusInfo(index : keyof searchAbout['goodsList']){
         }else if(res.data.publishStatus == '1' && res.data.saleStatus == '1'){
           searchAbout.goodsList[index].status = '在卖'
           searchAbout.goodsList[index].color = 'green'
-        }else if(res.data.publishStatus == '2' && res.data.saleStatus == '2'){
+        }else if(res.data.saleStatus == '2'){
           searchAbout.goodsList[index].status = '卖掉了'
           searchAbout.goodsList[index].color = 'red'
         }else{

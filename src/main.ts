@@ -7,12 +7,18 @@ import './utils/css/base.css'
 import $ from 'jquery'
 import vue3TsJsoneditor from 'vue3-ts-jsoneditor';
 import '@/styles/index.scss'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+
 
 const app = createApp(App)
 
 app.use(ElementPlus)
 app.use(router)
 app.use($)
+
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
 
 if(!localStorage.getItem("settingMap")){
   let settingMap = {
