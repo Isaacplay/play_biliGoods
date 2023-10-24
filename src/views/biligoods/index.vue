@@ -61,9 +61,9 @@
       </el-form>
       <div>
         <vue-jsoneditor
-            height="120"
+            height="180"
             mode="text"
-            v-model:json="form" 
+            v-model:json="from_json" 
           />
       </div>
       <template #footer>
@@ -99,7 +99,12 @@ const form = reactive({
 
 
 const from_json = computed<object>(() => {
-  return JSON.stringify(form)
+  let map = {}
+  map[form.id] = {
+    'name':form.name,
+    'price':Number(form.price)
+  }
+  return map
 })
 
 onMounted(() => {

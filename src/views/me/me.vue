@@ -65,7 +65,8 @@ onMounted(() => {
     settingMap.me = map.me
   }
   if(haveCookie.value){
-    getSelledList(1)
+    getOtherSelledList()
+    // getSelledList(1)
   }
 })
 function analysisAction(){
@@ -81,13 +82,13 @@ function analysisAction(){
     }
     for(let t of i.detailDtoList){
       let costMoney = Number(i.showPrice) * ((t.marketPrice/markerPrice))
-      if(buyItemMap[t.itemsId]){
-        buyItemMap[t.itemsId].costInthis = buyItemMap[t.itemsId].costInthis + costMoney
-        buyItemMap[t.itemsId].num++
-        buyItemMap[t.itemsId].price = ((buyItemMap[t.itemsId].costInthis)/buyItemMap[t.itemsId].num).toFixed(1)
+      if(buyItemMap[t.skuId]){
+        buyItemMap[t.skuId].costInthis = buyItemMap[t.skuId].costInthis + costMoney
+        buyItemMap[t.skuId].num++
+        buyItemMap[t.skuId].price = ((buyItemMap[t.skuId].costInthis)/buyItemMap[t.skuId].num).toFixed(1)
       }else{
-        buyItemMap[t.itemsId] = {
-          'price':costMoney,
+        buyItemMap[t.skuId] = {
+          'price':Number(costMoney),
           'img':t.img,
           'costInthis':costMoney,
           'name':i.c2cItemsName,
@@ -97,19 +98,29 @@ function analysisAction(){
     }
   }
   console.log(buyItemMap)
+  refreshBuyItems(buyItemMap)
+
   //键值对的map 商品唯一id ： 卖的时候的价格
   let sendItemMap = {}     
+  let buyItemMap_copy = JSON.parse(JSON.stringify(buyItemMap))
   for(let i of UserInfo.havePublishedList){
     let allInPrice = 0
     let itemsIdList = []
     for(let k of i.detailDtoList){
       //出现可能是自己抽的商品 就算0成本吧 （摊手
-      if(buyItemMap[k.itemsId]){
-        allInPrice += Number(buyItemMap[k.itemsId].price)
+      if(buyItemMap_copy[k.skuId]){
+        if(buyItemMap_copy[k.skuId].num > 0){
+          allInPrice += Number(buyItemMap_copy[k.skuId].price)
+          buyItemMap_copy[k.skuId].num = buyItemMap_copy[k.skuId].num - 1
+        }else{
+          console.log(`一个${buyItemMap_copy[k.skuId].name} 是 自己换的 乘以系数`)
+          allInPrice += Number((k.marketPrice/100)*0.22)
+        }
       }else{
-        allInPrice += Number((k.marketPrice/100)*0.2)
+        console.log(`一个${k.name} 是 自己换的 乘以系数`)
+        allInPrice += Number((k.marketPrice/100)*0.22)
       }
-      itemsIdList.push(k.itemsId)
+      itemsIdList.push(k.skuId)
     }
     itemAnalysisData.downSellCost = itemAnalysisData.downSellCost + allInPrice
     i.inPrice = allInPrice
@@ -129,13 +140,53 @@ function analysisAction(){
       }
     }
   }
+  let other_income = 0
+  let other_cost = 0
+  for(let i of UserInfo.otherPublishedList){
+    let allInPrice = 0
+    if(buyItemMap_copy[i.skuId]){
+      if(buyItemMap_copy[i.skuId].num > 0){
+        allInPrice += Number(buyItemMap_copy[i.skuId].price)
+        buyItemMap_copy[i.skuId].num = buyItemMap_copy[i.skuId].num - 1
+      }else{
+        console.log(`一个${buyItemMap_copy[i.skuId].name} 是 自己换的 乘以系数`)
+        allInPrice += Number((i.marketPrice)*0.22)
+      }
+    }else{
+      console.log(`一个${i.name} 是 自己换的 乘以系数`)
+      allInPrice += Number((i.marketPrice)*0.22)
+    }
+    other_cost = other_cost + allInPrice
+    other_income = other_income + i.selledPrice
+    itemAnalysisData.downSellCost = itemAnalysisData.downSellCost + allInPrice
+    i.inPrice = allInPrice
+    let keyIds = i.skuId
+    if(sendItemMap[keyIds]){
+      sendItemMap[keyIds].earnings = sendItemMap[keyIds].earnings + Number(i.selledPrice) - i.inPrice
+      sendItemMap[keyIds].costInthis += i.inPrice 
+      sendItemMap[keyIds].num++
+    }else{
+      sendItemMap[keyIds] = {
+        'earnings':Number(i.selledPrice) - i.inPrice,
+        'img':i.img,
+        'costInthis':i.inPrice,
+        'name':i.name,
+        'num':1
+      }
+    }
+  }
+  console.log(`在其他平台卖了${other_income}元 成本是 ${other_cost}元`)
   //已经卖出的金额
-  itemAnalysisData.downSellMoney = Number(UserInfo.myInfo.income)
+  itemAnalysisData.downSellMoney = Number(UserInfo.myInfo.income) + other_income
   //在卖的商品的金额
   for(let i of UserInfo.myPublishList){
     itemAnalysisData.nowSellMoney += Number(i.showPrice)
     for(let k of i.detailDtoList){
-      itemAnalysisData.nowSellCost += buyItemMap[k.itemsId].price || Number((k.marketPrice/100)*0.2)
+      if(buyItemMap[k.skuId]){
+        itemAnalysisData.nowSellCost += buyItemMap[k.skuId].price 
+      }else{
+        itemAnalysisData.nowSellCost += Number((k.marketPrice/100)*0.2)
+      }
     }
   }
   //把累计的map转成数组排序
@@ -161,6 +212,7 @@ interface UserInfo {
   myPublishList:[];
   myPurchasedList:[];
   havePublishedList:[];
+  otherPublishedList:[];
   allCost:[],  
   sendCost:[] 
 }
@@ -169,6 +221,7 @@ const UserInfo : UserInfo = reactive({
   myPublishList:[],     //在卖的
   myPurchasedList:[],   //总购买的
   havePublishedList:[],   //卖完的
+  otherPublishedList:[],   //在其他平台卖完的 后续 考虑全部用这个
   allCost:[],   //合并累计
   sendCost:[] 
 })
@@ -180,6 +233,30 @@ const itemAnalysisData = reactive({
   nowSellCost:0,   //在卖的商品的成本
   waitSellCost:0,   //没卖的商品的成本
 })
+function refreshBuyItems(map : any){
+  let data = []
+  for(let i in map){
+    let i_map = map[i]
+    i_map['_id'] = i
+    data.push(i_map)
+  }
+  $.ajax({
+    type: "POST",
+    url: 'http://111.229.88.32:3000/shopList/insertBuyShopItems',
+    timeout: 20000,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Credentials": "true",
+    },
+    data: JSON.stringify(data),
+    success: function (res) {
+      console.log(res)
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  }); 
+}
 function getMyUserInfo(){
   $.ajax({
     type: "GET",
@@ -255,6 +332,26 @@ function getMyPurchasedItems(pageNumber : number){
     }
   });
 }
+
+function getOtherSelledList(){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/selledItem/getSelledItem`,
+    timeout: 20000,
+    headers : {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Credentials":"true",
+    },
+    success: function (res) {
+      UserInfo.otherPublishedList = res
+      getSelledList(1)
+    },
+    error:function (res) {
+      console.log(res)
+    }
+  });
+}
+
 function getSelledList(pageNumber : number){
   $.ajax({
     type: "GET",

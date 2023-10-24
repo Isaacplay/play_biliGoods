@@ -9,6 +9,9 @@
           <el-button  @click="sortByTime">时间</el-button>
           <el-button  @click="sortByPrice">价格</el-button>
         </div>
+        <div>
+          <div style="margin-top: 12px;" v-show="buyItems.num > 0" class="filter-name">累计购入数: {{ buyItems.num }}   平均购入价: {{ buyItems.price }}</div>
+        </div>
       </div>
       <div class="filter-header-right">
         <el-button color="#626aef" @click="getItemsByid">查询</el-button>
@@ -116,6 +119,7 @@ function getStatusInfo(index : keyof searchAbout['goodsList']){
 }
 
 function getItemsByid(){
+  getBuyItemsById()
   const loading = ElLoading.service({
     lock: true,
     text: 'Loading',
@@ -141,6 +145,43 @@ function getItemsByid(){
     },
     error:function (res) {
       loading.close()
+      console.log(res)
+    }
+  });
+}
+
+interface buyItems {
+  img: string;
+  _id: string;
+  costInthis:number;
+  name: string;
+  price: number;
+  num: number;
+}
+const buyItems : buyItems = reactive({
+  _id:'',
+  name:'',
+  img:'',
+  price:0,
+  num:0,
+  costInthis:0
+})
+
+function getBuyItemsById(){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/shopList/getBuyShopItem?id=${searchAbout.id}`,
+    timeout: 20000,
+    success: function (res) {
+      if(res && res.length > 0){
+        buyItems.price = res[0].price
+        buyItems.num = res[0].num
+      }else{
+        buyItems.price = 0
+        buyItems.num = 0
+      }
+    },
+    error:function (res) {
       console.log(res)
     }
   });
@@ -238,12 +279,12 @@ function openUrl(itemId : String){
       display: flex;
       align-items: center;
       margin-right: 24px;
-      .filter-name{
+    }
+    .filter-name{
         font-size: 18px;
         margin-right: 24px;
         white-space: nowrap;
       }
-    }
   }
   .analysis-box{
     background-color: white;
