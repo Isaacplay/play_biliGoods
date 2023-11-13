@@ -111,12 +111,12 @@ function getWindowSize(){
   height: 100%;
   font-size: 14px;
   // background-color: rgb(235,235,235);
-  background-color: rgba(222,71,42,1);
+  background-color: #717F9D;
   position: relative;
   .top-header{
     width: 100%;
     height: 120px;
-    background-color: #F6AD62;
+    background-color: #6F90BB;
     position: relative;
     // z-index: 5;
     // background-image: url('@/assets/background/top_bar.jpg');
@@ -156,18 +156,18 @@ function getWindowSize(){
     }
     .left-con{
       width: 15%;
-      background-image: url('@/assets/background/eleysia_left.jpg');
-      background-position: top;
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
-    .right-con{
-      width: 15%;
-      background-image: url('@/assets/background/eleysia_left.jpg');
+      background-image: url('@/assets/background/snow_left.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;
       transform: rotateY(180deg);
+    }
+    .right-con{
+      width: 15%;
+      background-image: url('@/assets/background/snow_left.png');
+      background-position: top;
+      background-size: contain;
+      background-repeat: no-repeat;
     }
   }
   .bottom-con{
