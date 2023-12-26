@@ -240,6 +240,37 @@ function refreshBuyItems(map : any){
     i_map['_id'] = i
     data.push(i_map)
   }
+
+  let result = []
+  for (let i = 0; i < data.length; i += 400) {
+      result.push(data.slice(i, i + 400))
+  }
+  console.log(result.length)
+  deleteAllBuyShopItems(result)
+}
+
+function deleteAllBuyShopItems(result :any){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/shopList/deleteAllShopItem`,
+    timeout: 20000,
+    headers : {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Credentials":"true",
+    },
+    success: function (res) {
+      console.log('删除成功')
+      for(let i = 0 ; i < result.length ; i ++ ){
+          insertAction(result[i])
+      }
+    },
+    error:function (res) {
+      console.log(res)
+    }
+  });
+}
+
+function insertAction(list :any){
   $.ajax({
     type: "POST",
     url: 'http://111.229.88.32:3000/shopList/insertBuyShopItems',
@@ -248,7 +279,7 @@ function refreshBuyItems(map : any){
       "Content-Type": "application/json",
       "Access-Control-Allow-Credentials": "true",
     },
-    data: JSON.stringify(data),
+    data: JSON.stringify(list),
     success: function (res) {
       console.log(res)
     },
@@ -257,6 +288,7 @@ function refreshBuyItems(map : any){
     }
   }); 
 }
+
 function getMyUserInfo(){
   $.ajax({
     type: "GET",

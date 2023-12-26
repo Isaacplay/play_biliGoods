@@ -9,30 +9,25 @@
           </div>
         </div>
         <div class="filter-header-right">
-          <el-input-number v-model="step" :step="10" :min="10" controls-position="right" step-strictly />
+          <el-input-number v-model="step" :step="10" :min="10" :max="maxStep" controls-position="right" step-strictly />
           <el-button color="#626aef" @click="search">查询</el-button>
           <el-button color="#626aef" plain @click="reset">重置</el-button>
         </div>
       </div>
       <div v-show="searchAbout.inSearch" class="search-more">
-        <div class="search-front">Total : {{ searchAbout.allStep }},Now : {{ searchAbout.now_step }}</div>
-        <div v-show="searchAbout.allStep == searchAbout.now_step">
-          <el-input-number style="margin-right: 24px;" v-model="addStep" :step="10" :min="10" controls-position="right"
-            step-strictly />
-          <el-button style="margin-right: 24px;" color="#626aef" @click="addSearch">追加</el-button>
-        </div>
-        <el-button v-show="searchAbout.allStep == searchAbout.now_step" color="#626aef" plain
-          @click="clear">重新搜索</el-button>
+        <div class="search-front">这是第{{ nodeSearch.page }}页</div>
+        <el-button style="margin-right: 24px;" color="#626aef" @click="addSearch">下一页</el-button>
       </div>
     </div>
     <div class="goods-box">
       <div
-        :class="searchAbout.keyMap[item.itemsId] ? 'goods-item-instar' : (item.breakNewPrice ? 'goods-item-break' : 'goods-item')"
+        :class="searchAbout.keyMap[item.itemsId] ? 'goods-item-instar' : 'goods-item'"
         v-for="(item, index) in searchAbout.lastArrary" :key="index">
         <div>
-          <div v-if="searchAbout.keyMap[item.itemsId]" @click="editCheck(item)">监控阈值：{{ searchAbout.keyMap[item.itemsId] }}</div>
-          <div class='click-span' v-else @click="addToStar(item)">无监控阈值,是否添加？</div>
-          <div v-if="searchAbout.lowestMap[item.itemsId]">历史搜索最低价：{{ searchAbout.lowestMap[item.itemsId] }}</div>
+          <template v-show="haveCookie">
+            <div v-if="searchAbout.keyMap[item.itemsId]" @click="editCheck(item)">监控阈值：{{ searchAbout.keyMap[item.itemsId] }}</div>
+            <div class='click-span' v-else @click="addToStar(item)">无监控阈值,是否添加？</div>
+          </template>
           <img class="goods-item-img" style="cursor:pointer ;" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
           <div>{{ item.name }}</div>
           <div v-if="item.list.length > 0">
@@ -81,22 +76,19 @@
 import { ref, reactive, onMounted,computed} from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import VueJsoneditor from 'vue3-ts-jsoneditor'
+//常量
+const step = ref(2000)
 const addStep = ref(2000)
+const maxStep = ref(50)
 const isAdd = ref(false)
 const dialogFormVisible = ref(false)
 const haveCookie = ref(false)
-let settingMap = reactive({
-  biligoods: {
-    url: '',
-  },
-})
 const formLabelWidth = '140px'
 const form = reactive({
   name: '',
   price: '',
   id: '',
 })
-
 
 const from_json = computed<object>(() => {
   let map = {}
@@ -108,20 +100,14 @@ const from_json = computed<object>(() => {
 })
 
 onMounted(() => {
-  document.onkeydown = function (e) {    //对整个页面监听  
-    var keyNum = window.event ? e.keyCode : e.which;       //获取被按下的键值  
-    // console.log(keyNum)
-    // if(keyNum==70){  
-    //   search()
-    // } 
-    // stopWater.value = true
-  }
-  getCheckList()
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
-  searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap") || "{}");   //获取最低价
-  if (localStorage.getItem("settingMap")) {
-    let map = JSON.parse(localStorage.getItem("settingMap") || "{}");   //获取设置
-    settingMap.biligoods = map.biligoods
+  if(haveCookie.value){
+    getCheckList()
+    step.value = 6000
+    maxStep.value = 99999
+  }else{
+    step.value = 20
+    maxStep.value = 50
   }
 })
 function getCheckList() {
@@ -195,13 +181,13 @@ function checkCookie(objname: string) {//获取指定名称的cookie的值
   return false
 }
 function addSearch() {
-  searchAbout.allStep += addStep.value
-  bilibiliGoodsSearch()
+  searchAbout.goodsList = []
+  nodeSearch.page++
+  biliNodeSearch()
 }
 interface searchAbout {
   goodsList: any[];
   lastArrary: {
-    breakNewPrice: any
     name: any;
     list: any;
     itemsId: string,
@@ -210,9 +196,6 @@ interface searchAbout {
     price: string;
   }[];
   inSearch: boolean;
-  nextId: string;
-  allStep: number;
-  now_step: number;
   drawer: boolean;
   isBan: boolean;
   starList: any[];
@@ -224,9 +207,6 @@ const searchAbout: searchAbout = reactive({
   goodsList: [],
   lastArrary: [],
   inSearch: false,
-  nextId: '',
-  allStep: 0,
-  now_step: 0,
   drawer: false,
   starList: [],
   keyMap: {},
@@ -241,15 +221,12 @@ function openUrl(itemId: String) {
   window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)
 }
 function search() {
-  searchAbout.now_step = 0
   searchAbout.lastArrary = []
-  searchAbout.nextId = ''
   searchAbout.inSearch = true
-  searchAbout.allStep = step.value
   nodeSearch.size = step.value
   nodeSearch.page = 1
   searchAbout.goodsList = []
-  bilibiliGoodsSearch()
+  biliNodeSearch()
 }
 function analysisAction() {
   let arrary = searchAbout.goodsList
@@ -272,15 +249,12 @@ function analysisAction() {
       name: map[t][0].name,
       itemsId: t,
       list: map[t],
-      breakNewPrice: getBreakPrice(map[t]),
       img: map[t][0].icon,
       id: map[t][0].id,
       price: getLowPrice(map[t])
     }
     if (searchAbout.keyMap[t]) {
       filterMap.star.push(map2)
-    } else if (map2.breakNewPrice) {
-      filterMap.newLow.push(map2)
     } else {
       filterMap.nomal.push(map2)
     }
@@ -289,15 +263,6 @@ function analysisAction() {
   lastArrary = filterMap.star.concat(filterMap.newLow, filterMap.nomal)
   searchAbout.lastArrary = lastArrary
   searchAbout.showAnalysis = true
-}
-function getBreakPrice(list: any) {
-  let flag = false
-  for (let i of list) {
-    if (i.breakNewPrice) {
-      flag = true
-    }
-  }
-  return flag
 }
 function getLowPrice(list: any) {
   let low = Number(list[0].price)
@@ -311,97 +276,6 @@ function getLowPrice(list: any) {
     }
   }
   return low + '~' + high
-}
-function bilibiliGoodsSearch() {
-  if (settingMap.biligoods.url == 'http://111.229.88.32:3000/biligoods/getBiligoodslist') {
-    biliNodeSearch()
-    return
-  }
-  let data = {
-    nextId: searchAbout.nextId.length == 0 ? null : searchAbout.nextId,
-    categoryFilter: categoryFilter.value,
-    sortType: sortType.value,
-    priceFilters: priceFilters.value,
-    discountFilters: discountFilters.value
-  }
-  $.ajax({
-    type: "POST",
-    url: `${settingMap.biligoods.url}/mall-magic-c/internet/c2c/v2/list`,
-    timeout: 20000,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Credentials": "true",
-    },
-    // xhrFields: {
-    //   withCredentials: haveCookie.value //True :允许跨域携带cookie信息 
-    // },
-    data: JSON.stringify(data),
-    success: function (res) {
-      if (res.code == 0) {
-        searchAbout.isBan = false
-        //精简内容 优化 数组
-        res.data.data = res.data.data.map((item: any) => {
-          let breakNewPrice = false
-          let itemsId = item.detailDtoList.map((itema) => {
-            return itema.skuId
-          })
-          itemsId = itemsId.sort()
-          if (itemsId.length == 1) {
-            let key = itemsId[0]
-            if (searchAbout.lowestMap[key]) {
-              if (Number(item.showPrice) < Number(searchAbout.lowestMap[key])) {
-                searchAbout.lowestMap[key] = Number(item.showPrice)
-                breakNewPrice = true
-              }
-            } else {
-              searchAbout.lowestMap[key] = Number(item.showPrice)
-            }
-          } else {
-            let all = 0
-            for (let i of itemsId) {
-              let price = searchAbout.lowestMap[i] || 0
-              all += Number(price)
-            }
-            if (Number(item.showPrice) < Number(all)) {
-              breakNewPrice = true
-            }
-          }
-          return {
-            name: item.c2cItemsName,
-            icon: item.detailDtoList[0].img,
-            itemsId: itemsId,
-            price: item.showPrice,
-            breakNewPrice: breakNewPrice,
-            id: item.c2cItemsId
-          }
-        })
-        let arrary = searchAbout.goodsList
-        arrary = arrary.concat(res.data.data)
-        searchAbout.goodsList = arrary
-        searchAbout.nextId = res.data.nextId
-        searchAbout.now_step += res.data.data.length
-        if (searchAbout.now_step < searchAbout.allStep) {
-          setTimeout(() => {
-            bilibiliGoodsSearch()
-          }, 2000)
-        } else {
-          analysisAction()
-          localStorage.setItem("lowestMap", JSON.stringify(searchAbout.lowestMap));
-        }
-      } else {
-        //失败重发
-        analysisAction()
-        localStorage.setItem("lowestMap", JSON.stringify(searchAbout.lowestMap));
-        searchAbout.isBan = true
-        // setTimeout(()=>{
-        //   bilibiliGoodsSearch()
-        // },10000)
-      }
-    },
-    error: function (res) {
-      console.log(res)
-    }
-  });
 }
 
 interface nodeSearch {
@@ -429,51 +303,25 @@ function biliNodeSearch() {
       loading.close()
       //精简内容 优化 数组
       res = res.map((item: any) => {
-        let breakNewPrice = false
         let itemsId = item.categoryId.split(',')
         itemsId = itemsId.sort()
-        if (itemsId.length == 1) {
-          let key = itemsId[0]
-          if (searchAbout.lowestMap[key]) {
-            if (Number(item.showPrice) < Number(searchAbout.lowestMap[key])) {
-              searchAbout.lowestMap[key] = Number(item.showPrice)
-              breakNewPrice = true
-            }
-          } else {
-            searchAbout.lowestMap[key] = Number(item.showPrice)
-          }
-        } else {
-          let all = 0
-          for (let i of itemsId) {
-            let price = searchAbout.lowestMap[i] || 0
-            all += Number(price)
-          }
-          if (Number(item.showPrice) < Number(all)) {
-            breakNewPrice = true
-          }
-        }
         return {
           name: item.name,
           icon: item.img,
           itemsId: itemsId,
           price: item.price,
-          breakNewPrice: breakNewPrice,
           id: item._id
         }
       })
-      let arrary = searchAbout.goodsList
-      arrary = arrary.concat(res)
-      let obj = {};
-      arrary = arrary.reduce((cur, next) => {
-        obj[next.id] ? "" : obj[next.id] = true && cur.push(next);
-        return cur;
-      }, [])
-      searchAbout.goodsList = arrary
-      searchAbout.now_step += res.length
-      nodeSearch.page++
+      // let arrary = searchAbout.goodsList
+      // arrary = arrary.concat(res)
+      // let obj = {};
+      // arrary = arrary.reduce((cur, next) => {
+      //   obj[next.id] ? "" : obj[next.id] = true && cur.push(next);
+      //   return cur;
+      // }, [])
+      searchAbout.goodsList = res
       analysisAction()
-      localStorage.setItem("lowestMap", JSON.stringify(searchAbout.lowestMap));
-
     },
     error: function (res) {
       loading.close()
@@ -483,57 +331,15 @@ function biliNodeSearch() {
 }
 function clear() {
   searchAbout.goodsList = []
-  searchAbout.nextId = ''
   searchAbout.inSearch = false
-  searchAbout.allStep = 0
-  searchAbout.now_step = 0
   searchAbout.lastArrary = []
 }
 function reset() {
   searchAbout.goodsList = []
-  searchAbout.nextId = ''
   searchAbout.inSearch = false
-  searchAbout.allStep = 0
-  searchAbout.now_step = 0
   searchAbout.lastArrary = []
-
-  categoryFilter.value = ''
-  sortType.value = 'TIME_DESC'
-  priceFilters.value = []
-  discountFilters.value = []
 }
-//常量
-const categoryFilter = ref('')
-const categoryFilterList = [
-  { value: '2312', label: '手办' },
-  { value: '2066', label: '模型' },
-  { value: '2331', label: '周边' },
-  { value: '2273', label: '3C' },
-  { value: 'fudai_cate_id', label: '福袋' },
-]
-const sortType = ref('TIME_DESC')
-const sortTypeList = [
-  { value: 'TIME_DESC', label: '时间排序（默认）' },
-  { value: 'PRICE_ASC', label: '价格升序' },
-  { value: 'PRICE_DESC', label: '价格降序' },
-]
-const priceFilters = ref([])
-const priceFiltersList = [
-  { value: '0-2000', label: '0-20' },
-  { value: '2000-3000', label: '20-30' },
-  { value: '3000-5000', label: '30-50' },
-  { value: '5000-10000', label: '50-100' },
-  { value: '10000-20000', label: '100-200' },
-  { value: '20000-0', label: '200以上' },
-]
-const discountFilters = ref([])
-const discountFiltersList = [
-  { value: '0-30', label: '3折以下' },
-  { value: '30-50', label: '3-5折' },
-  { value: '50-70', label: '5-7折' },
-  { value: '70-100', label: '7折以上' },
-]
-const step = ref(2000)
+
 </script>
 <style scoped>
 .click-span {

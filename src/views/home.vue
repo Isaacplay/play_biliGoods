@@ -21,15 +21,15 @@
           <img  src="@/assets/icon/Myhome.png"/>
           <div>分析</div>
         </div>
-        <div v-show="!isMobile" :class="homePage.flag == 'lost'?'icon-con max-img':'icon-con'" @click="changeToFlag('lost')">
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'lost'?'icon-con max-img':'icon-con'" @click="changeToFlag('lost')">
           <img  src="@/assets/icon/lost.png"/>
           <div>耻辱榜</div>
         </div>
-        <div v-show="!isMobile" :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
           <img src="@/assets/icon/fav.png"/>
           <div>收藏夹</div>
         </div>
-        <div :class="homePage.flag == 'shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('shop')">
+        <div v-show='haveCookie' :class="homePage.flag == 'shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('shop')">
           <img src="@/assets/icon/shopping.png"/>
           <div>橱窗</div>
         </div>
@@ -37,11 +37,11 @@
           <img src="@/assets/icon/shopping.png"/>
           <div>橱窗</div>
         </div> -->
-        <div v-show="!isMobile" :class="homePage.flag == 'me'?'icon-con max-img':'icon-con'" @click="changeToFlag('me')">
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'me'?'icon-con max-img':'icon-con'" @click="changeToFlag('me')">
           <img src="@/assets/icon/me.png"/>
           <div>统计</div>
         </div>
-        <div v-show="!isMobile" :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
           <img src="@/assets/icon/setting.png"/>
           <div>设置</div>
         </div>
@@ -62,6 +62,7 @@ import lost from './lost/lost.vue'
 
 const tab  = ref(null as any)
 const isMobile  = ref(false)
+const haveCookie = ref(false)
 const route = useRoute()
 
 interface lookup {
@@ -74,11 +75,21 @@ const homePage = reactive({
 
 onMounted(() => {
   changeToFlag('biligoods')
+  haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   if(route.query.id && route.query.id.length > 0){
     changeToFlag('biliShop')
   }
   getWindowSize()
 })
+
+function checkCookie(objname: string) {//获取指定名称的cookie的值
+  var arrstr = document.cookie.split("; ");
+  for (var i = 0; i < arrstr.length; i++) {
+    var temp = arrstr[i].split("=");
+    if (temp[0] == objname) return true;
+  }
+  return false
+}
 
 function changeToFlag(flag : string){
   homePage.flag = flag
