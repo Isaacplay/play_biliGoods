@@ -37,7 +37,7 @@
           <div @click="addAction(item,'Refresh')" class="icon-editrefush"><el-icon><EditPen /></el-icon></div>
           <div @click="changeFishFlag(item)" class="icon-fishFlag">
             <img v-if="UserInfo.fishFlag[item.itemsId]" src="@/assets/icon/xianyu.png" alt="">
-            <img v-else src="" alt="@/assets/icon/xianyu-fill.png">
+            <img v-else src="@/assets/icon/xianyu-fill.png" alt="">
           </div>
         </div>
       </template>
@@ -146,7 +146,9 @@ function publishConfirm(){
     success: function (res) {
       ElMessage.success('发布成功！')
       pushLishVisible.value = false
-      refeashAction()
+      setTimeout(() => {
+        refeashAction()
+      }, 3000);
     },
     error: function (res) {
       ElMessage.error('error')
@@ -329,10 +331,10 @@ function getLowPrice(list: any) {
 function changeFishFlag(item){
   if(UserInfo.fishFlag[item.itemsId]){
     UserInfo.fishFlag[item.itemsId] = false
-    ElMessage.success('添加成功！')
+    ElMessage.success('移除成功！')
   }else{
     UserInfo.fishFlag[item.itemsId] = true
-    ElMessage.success('移除成功！')
+    ElMessage.success('添加成功！')
   }
   localStorage.setItem("fishFlag",JSON.stringify(UserInfo.fishFlag));
 }
@@ -388,9 +390,10 @@ function getMyPublish() {
 }
 
 function getRefushlist(){
+  let DedeUserID = getCookie('DedeUserID')  
   $.ajax({
     type: "GET",
-    url: 'http://111.229.88.32:3000/refushList/getRefushList',
+    url: `http://111.229.88.32:3000/refushList/getRefushList?DedeUserID=${DedeUserID}`,
     timeout: 20000,
     headers: {
       "Content-Type": "application/json",
@@ -408,25 +411,44 @@ function getRefushlist(){
 }
 
 function setRefushList(){
+  let DedeUserID = getCookie('DedeUserID')  
   let list = UserInfo.refushList.map((item)=>{
-    return {'itemId' : item}
+    return {'itemId' : item,'DedeUserID':DedeUserID}
   })
-  $.ajax({
-    type: "POST",
-    url: 'http://111.229.88.32:3000/refushList/refreshList',
-    timeout: 20000,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Credentials": "true",
-    },
-    data: JSON.stringify(list),
-    success: function (res) {
-      ElMessage.success('保存成功！')
-    },
-    error: function (res) {
-      ElMessage.error('error')
-    }
-  }); 
+  if(UserInfo.refushList.length == 0){
+    $.ajax({
+      type: "GET",
+      url: `http://111.229.88.32:3000/refushList/deleteRefreshList?DedeUserID=${DedeUserID}`,
+      timeout: 20000,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      success: function (res) {
+        ElMessage.success('保存成功！')
+      },
+      error: function (res) {
+        ElMessage.error('error')
+      }
+    }); 
+  }else{
+    $.ajax({
+      type: "POST",
+      url: 'http://111.229.88.32:3000/refushList/refreshList',
+      timeout: 20000,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Credentials": "true",
+      },
+      data: JSON.stringify(list),
+      success: function (res) {
+        ElMessage.success('保存成功！')
+      },
+      error: function (res) {
+        ElMessage.error('error')
+      }
+    }); 
+  }
+  
 }
 
 function clearRefushList(){
@@ -532,6 +554,16 @@ function checkCookie(objname: string) {     //获取指定名称的cookie的值
   }
   return false
 }
+
+function getCookie(objname : string){     //获取指定名称的cookie的值
+  var arrstr = document.cookie.split("; ");
+  for(var i = 0;i < arrstr.length;i ++){
+    var temp = arrstr[i].split("=");
+    if(temp[0] == objname) return temp[1];
+  }
+  return ''
+}
+
 </script>
 <style lang="scss"  scoped>
 .containerShop {

@@ -9,7 +9,7 @@
           <el-button  @click="sortByTime">时间</el-button>
           <el-button  @click="sortByPrice">价格</el-button>
         </div>
-        <div>
+        <div v-if="haveCookie">
           <div style="margin-top: 12px;" v-show="buyItems.num > 0" class="filter-name">累计购入数: {{ buyItems.num }}   平均购入价: {{ buyItems.price }}</div>
         </div>
       </div>
@@ -42,11 +42,13 @@ import { ref,reactive ,onMounted} from 'vue'
 import {useRoute,useRouter} from 'vue-router'
 import * as echarts from "echarts";
 import { ElMessage , ElLoading  } from 'element-plus'
+const haveCookie = ref(false)
 
 const route = useRoute()
 const main = ref() // 使用ref创建虚拟DOM引用，使用时用main.value
 
 onMounted(() => {
+  haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   if(route.query.id && route.query.id.length > 0){
     searchAbout.id = route.query.id
     getItemsByid()
@@ -71,6 +73,15 @@ const searchAbout : searchAbout = reactive({
   index:0,
   limit:0
 })
+
+function checkCookie(objname: string) {//获取指定名称的cookie的值
+  var arrstr = document.cookie.split("; ");
+  for (var i = 0; i < arrstr.length; i++) {
+    var temp = arrstr[i].split("=");
+    if (temp[0] == objname) return true;
+  }
+  return false
+}
 
 function checkStatus(){
   searchAbout.limit = searchAbout.index + 15

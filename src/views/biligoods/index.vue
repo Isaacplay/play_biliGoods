@@ -24,7 +24,7 @@
         :class="searchAbout.keyMap[item.itemsId] ? 'goods-item-instar' : 'goods-item'"
         v-for="(item, index) in searchAbout.lastArrary" :key="index">
         <div>
-          <template v-show="haveCookie">
+          <template v-if="haveCookie">
             <div v-if="searchAbout.keyMap[item.itemsId]" @click="editCheck(item)">监控阈值：{{ searchAbout.keyMap[item.itemsId] }}</div>
             <div class='click-span' v-else @click="addToStar(item)">无监控阈值,是否添加？</div>
           </template>
@@ -215,7 +215,7 @@ const searchAbout: searchAbout = reactive({
   isBan: false
 })
 function openAnalysis(itemId: String) {
-  window.open(`http://111.229.88.32:7777/play_biligoods/#/?id=${itemId}`)
+  window.open(`${window.location.origin}/#/?id=${itemId}`)
 }
 function openUrl(itemId: String) {
   window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)

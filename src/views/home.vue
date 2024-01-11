@@ -122,12 +122,12 @@ function getWindowSize(){
   height: 100%;
   font-size: 14px;
   // background-color: rgb(235,235,235);
-  background-color: #717F9D;
+  background-color: #9a9ebd;
   position: relative;
   .top-header{
     width: 100%;
     height: 120px;
-    background-color: #6F90BB;
+    background-color: #9a9ebd;
     position: relative;
     // z-index: 5;
     // background-image: url('@/assets/background/top_bar.jpg');
@@ -167,7 +167,7 @@ function getWindowSize(){
     }
     .left-con{
       width: 15%;
-      background-image: url('@/assets/background/snow_left.png');
+      background-image: url('@/assets/background/2024Newyear_left.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;
@@ -175,7 +175,7 @@ function getWindowSize(){
     }
     .right-con{
       width: 15%;
-      background-image: url('@/assets/background/snow_left.png');
+      background-image: url('@/assets/background/2024Newyear_left.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;

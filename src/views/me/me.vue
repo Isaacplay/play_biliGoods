@@ -366,9 +366,10 @@ function getMyPurchasedItems(pageNumber : number){
 }
 
 function getOtherSelledList(){
+  let DedeUserID = getCookie('DedeUserID')  
   $.ajax({
     type: "GET",
-    url: `http://111.229.88.32:3000/selledItem/getSelledItem`,
+    url: `http://111.229.88.32:3000/selledItem/getSelledItem?DedeUserID=${DedeUserID}`,
     timeout: 20000,
     headers : {
       "Content-Type": "application/json",
@@ -418,6 +419,14 @@ function checkCookie(objname : string){     //获取指定名称的cookie的值
     if(temp[0] == objname) return true;
   }
   return false
+}
+function getCookie(objname : string){     //获取指定名称的cookie的值
+  var arrstr = document.cookie.split("; ");
+  for(var i = 0;i < arrstr.length;i ++){
+    var temp = arrstr[i].split("=");
+    if(temp[0] == objname) return temp[1];
+  }
+  return ''
 }
 </script>
 <style lang="scss"  scoped>
