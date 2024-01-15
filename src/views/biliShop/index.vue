@@ -10,11 +10,15 @@
           <el-button  @click="sortByPrice">价格</el-button>
         </div>
         <div v-if="haveCookie">
-          <div style="margin-top: 12px;" v-show="buyItems.num > 0" class="filter-name">累计购入数: {{ buyItems.num }}   平均购入价: {{ buyItems.price }}</div>
+          <div style="margin-top: 12px;"  class="filter-name">
+            <span v-show="buyItems.num > 0"> 累计购入数: {{ buyItems.num }}  平均购入价: {{ buyItems.price }} </span>
+            <span> 监控阈值: {{ LockList.price }}</span>
+          </div>
         </div>
       </div>
       <div class="filter-header-right">
         <el-button color="#626aef" @click="getItemsByid">查询</el-button>
+        <el-button v-if="haveCookie" plain color="#626aef" type="default" @click="setPriceAction">设置状态</el-button>
         <el-button color="#626aef" @click="checkStatus">检测状态</el-button>
       </div>
     </div>
@@ -33,8 +37,28 @@
           <div class="status" :style="{'color':item.color}" @click="openUrl(item._id)">{{ item.status || '' }}</div>
         </div>
       </div>
-
     </div>
+    <el-dialog v-model="form.show" width="400px" title="CheckList">
+      <el-form :model="form">
+        <el-form-item label="Id" :label-width="formLabelWidth">
+          <el-input v-model="form.id" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="Name" :label-width="formLabelWidth">
+          <el-input v-model="form.name" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="Price" :label-width="formLabelWidth">
+          <el-input v-model="form.price" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="form.show = false">Cancel</el-button>
+          <el-button type="primary" @click="insertCheckList">
+            Confirm
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <script setup lang="ts">
@@ -42,6 +66,7 @@ import { ref,reactive ,onMounted} from 'vue'
 import {useRoute,useRouter} from 'vue-router'
 import * as echarts from "echarts";
 import { ElMessage , ElLoading  } from 'element-plus'
+const formLabelWidth = '120px'
 const haveCookie = ref(false)
 
 const route = useRoute()
@@ -92,6 +117,78 @@ function changeIndexTothis(index : number){
   searchAbout.index = index
 }
 
+interface LockList {
+  price: string;
+  isInList:boolean
+}
+const LockList : LockList = reactive({
+  price:'--',
+  isInList:false
+})
+
+function getLockListById(id : String){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/checkList/getCheckList?id=${id}`,
+    timeout: 20000,
+    success: function (res) {
+      console.log(res)
+      if(res.length > 0){
+        LockList.isInList = true
+        LockList.price = res[0].price
+      }else{
+        LockList.isInList = false
+        LockList.price = '--'
+      }
+    },
+    error:function (res) {
+      console.log(res)
+    }
+  });
+}
+
+const isAdd = ref(false)
+const form = reactive({
+  show:false,
+  name: '',
+  price: 0,
+  id: '',
+})
+
+function setPriceAction(){
+  form.name = searchAbout.name
+  form.id = searchAbout.id
+  form.price = (LockList.price == '--' ? 0 : Number(LockList.price))
+  form.show = true
+}
+
+function insertCheckList() {
+  let data = {
+    "name": form.name,
+    "price": Number(form.price),
+    "id": form.id
+  }
+  let url = !LockList.isInList ? `http://111.229.88.32:3000/checkList/insertCheckList`:`http://111.229.88.32:3000/checkList/changePrice`
+  $.ajax({
+    type: "POST",
+    url: url,
+    timeout: 20000,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Credentials": "true",
+    },
+    data: JSON.stringify(data),
+    success: function (res) {
+      ElMessage.success(res)
+      form.show = false
+    },
+    error: function (res) {
+      ElMessage.error('error')
+      form.show = false
+    }
+  }); 
+}
+
 function getStatusInfo(index : keyof searchAbout['goodsList']){
   $.ajax({
     type: "GET",
@@ -131,6 +228,7 @@ function getStatusInfo(index : keyof searchAbout['goodsList']){
 
 function getItemsByid(){
   getBuyItemsById()
+  getLockListById(searchAbout.id)
   const loading = ElLoading.service({
     lock: true,
     text: 'Loading',
@@ -217,8 +315,12 @@ function init() {
   })
   // let xAxis = []
   let value = []
-  list.forEach((item)=>{
+  let checkValue = []
+  list.forEach((item,index)=>{
     value.push([item.time,Number(item.price)])
+    if(LockList.isInList){
+      checkValue.push([item.time,Number(LockList.price)])
+    }
     // value.push(Number(item.price))
   })
   // 基于准备好的dom，初始化echarts实例
@@ -265,6 +367,13 @@ function init() {
       }
     ]
   };
+  if(LockList.isInList){
+    option.series.push({
+        data: checkValue,
+        type: 'line',
+        smooth: true
+    })
+  }
   // 使用刚指定的配置项和数据显示图表。
   myChart.setOption(option);
 }

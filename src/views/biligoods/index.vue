@@ -12,6 +12,7 @@
           <el-input-number v-model="step" :step="10" :min="10" :max="maxStep" controls-position="right" step-strictly />
           <el-button color="#626aef" @click="search">查询</el-button>
           <el-button color="#626aef" plain @click="reset">重置</el-button>
+          <el-button color="#626aef" @click="insert">插入</el-button>
         </div>
       </div>
       <div v-show="searchAbout.inSearch" class="search-more">
@@ -103,7 +104,7 @@ onMounted(() => {
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   if(haveCookie.value){
     getCheckList()
-    step.value = 6000
+    step.value = 10000
     maxStep.value = 99999
   }else{
     step.value = 20
@@ -130,6 +131,10 @@ function getCheckList() {
       console.log(res)
     }
   });
+}
+function insert(){
+  isAdd.value = true
+  dialogFormVisible.value = true
 }
 function addToStar(item) {
   form.name = item.name
@@ -200,7 +205,6 @@ interface searchAbout {
   isBan: boolean;
   starList: any[];
   keyMap: { [key: string]: number };
-  lowestMap: { [key: string]: any };
   showAnalysis: boolean;
 }
 const searchAbout: searchAbout = reactive({
@@ -210,12 +214,11 @@ const searchAbout: searchAbout = reactive({
   drawer: false,
   starList: [],
   keyMap: {},
-  lowestMap: {},
   showAnalysis: false,
   isBan: false
 })
 function openAnalysis(itemId: String) {
-  window.open(`${window.location.origin}/#/?id=${itemId}`)
+  window.open(`${window.location.href}?id=${itemId}`)
 }
 function openUrl(itemId: String) {
   window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)

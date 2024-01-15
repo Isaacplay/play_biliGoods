@@ -41,7 +41,7 @@
           <img src="@/assets/icon/me.png"/>
           <div>统计</div>
         </div>
-        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
+        <div :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
           <img src="@/assets/icon/setting.png"/>
           <div>设置</div>
         </div>
