@@ -63,4 +63,10 @@ table {
   color: #409eff;
   margin-right: 12px;
 }
-
+/*一行省略*/
+.text-overflow {
+  /*文字超出省略号  */
+  overflow:hidden; /*超出一行文字自动隐藏*/
+  text-overflow:ellipsis;/*文字隐藏后添加省略号*/
+  white-space:nowrap;  /*强制不换行*/
+}

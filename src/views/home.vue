@@ -41,10 +41,15 @@
           <img src="@/assets/icon/me.png"/>
           <div>统计</div>
         </div>
-        <div :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
+        <div v-show="!isMobile" :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
           <img src="@/assets/icon/setting.png"/>
           <div>设置</div>
         </div>
+      </div>
+      <div class="icpCon">
+        <img style="margin-right: 12px;" src="@/assets/icon/备案图标.png"/>
+        <a style="margin-right: 12px;" href="https://beian.mps.gov.cn/#/query/webSearch?code=32011402011508" rel="noreferrer" target="_blank">苏公网安备32011402011508</a>
+        <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank">苏ICP备2024061216号</a>
       </div>
     </div>
   </div>
@@ -122,12 +127,12 @@ function getWindowSize(){
   height: 100%;
   font-size: 14px;
   // background-color: rgb(235,235,235);
-  background-color: #9a9ebd;
+  background-color: #6ba7af;
   position: relative;
   .top-header{
     width: 100%;
     height: 120px;
-    background-color: #9a9ebd;
+    background-color: #6ba7af;
     position: relative;
     // z-index: 5;
     // background-image: url('@/assets/background/top_bar.jpg');
@@ -167,7 +172,7 @@ function getWindowSize(){
     }
     .left-con{
       width: 15%;
-      background-image: url('@/assets/background/2024Newyear_left.png');
+      background-image: url('@/assets/background/newYearMiku.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;
@@ -175,10 +180,11 @@ function getWindowSize(){
     }
     .right-con{
       width: 15%;
-      background-image: url('@/assets/background/2024Newyear_left.png');
+      background-image: url('@/assets/background/newYearMiku.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;
+      position: relative;
     }
   }
   .bottom-con{
@@ -194,6 +200,22 @@ function getWindowSize(){
     left: 50%;
     background: white;
     -webkit-transform: translate3d(-50%,0,0);
+    .icpCon{
+      display: flex;
+      align-items: center;
+      img{
+        width: 16px;
+        height: 16px;
+      }
+      a{
+        // color: white;
+        font-size: 12px;
+      }
+      white-space: nowrap;
+      position: absolute;
+      bottom: 12px;
+      left: 6px;
+    }
     .box{
       display: flex;
       align-items: center;

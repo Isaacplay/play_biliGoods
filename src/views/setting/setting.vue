@@ -56,7 +56,7 @@ const setting = reactive({
     {value:'http://111.229.88.32:3000/biligoods/getBiligoodslist'},
     {value:'http://localhost:7777/play_biligoods/api'},
     {value:'https://mall.bilibili.com'},
-    {value:'http://111.229.88.32:7777/play_biligoods/api'},
+    {value:'http://shop.isaacplay.fun/play_biligoods/api'},
     {value:'http://47.100.78.114'}
   ],
 })

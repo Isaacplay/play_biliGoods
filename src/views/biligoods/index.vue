@@ -10,27 +10,37 @@
         </div>
         <div class="filter-header-right">
           <el-input-number v-model="step" :step="10" :min="10" :max="maxStep" controls-position="right" step-strictly />
-          <el-button color="#626aef" @click="search">查询</el-button>
-          <el-button color="#626aef" plain @click="reset">重置</el-button>
-          <el-button color="#626aef" @click="insert">插入</el-button>
+          <el-button color="#626aef" style="margin-right: 12px;" @click="search">查询</el-button>
+          <div v-if="haveCookie">
+            <el-button color="#626aef" plain @click="check">检查</el-button>
+            <el-button color="#626aef" @click="insert">插入</el-button>
+          </div>
         </div>
       </div>
       <div v-show="searchAbout.inSearch" class="search-more">
         <div class="search-front">这是第{{ nodeSearch.page }}页</div>
         <el-button style="margin-right: 24px;" color="#626aef" @click="addSearch">下一页</el-button>
+        <div v-if="searchAbout.canCheck">
+          检查中 {{ searchAbout.checkIndex }} / {{ searchAbout.lastArrary.length }}
+        </div>
       </div>
     </div>
     <div class="goods-box">
       <div
         :class="searchAbout.keyMap[item.itemsId] ? 'goods-item-instar' : 'goods-item'"
         v-for="(item, index) in searchAbout.lastArrary" :key="index">
-        <div>
+        <div style="width: 100%;">
           <template v-if="haveCookie">
             <div v-if="searchAbout.keyMap[item.itemsId]" @click="editCheck(item)">监控阈值：{{ searchAbout.keyMap[item.itemsId] }}</div>
             <div class='click-span' v-else @click="addToStar(item)">无监控阈值,是否添加？</div>
           </template>
           <img class="goods-item-img" style="cursor:pointer ;" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
-          <div>{{ item.name }}</div>
+          <div class="sale-tag" v-if="item.status">
+            <img  v-if="item.status == '在卖'"  src="@/assets/icon/zaishouzhong.png" alt="">
+            <img  v-else-if="item.status == '卖掉了'"  src="@/assets/icon/maidiaole.png" alt="">
+            <img  v-else src="@/assets/icon/已下架.png" alt="">
+          </div>
+          <div class="text-overflow">{{ item.name }}</div>
           <div v-if="item.list.length > 0">
             <el-collapse>
               <el-collapse-item :title="item.price" name="1">
@@ -206,6 +216,8 @@ interface searchAbout {
   starList: any[];
   keyMap: { [key: string]: number };
   showAnalysis: boolean;
+  checkIndex:number;
+  canCheck:boolean
 }
 const searchAbout: searchAbout = reactive({
   goodsList: [],
@@ -215,6 +227,8 @@ const searchAbout: searchAbout = reactive({
   starList: [],
   keyMap: {},
   showAnalysis: false,
+  checkIndex:0,
+  canCheck:false,
   isBan: false
 })
 function openAnalysis(itemId: String) {
@@ -228,6 +242,7 @@ function search() {
   searchAbout.inSearch = true
   nodeSearch.size = step.value
   nodeSearch.page = 1
+  searchAbout.checkIndex = 0
   searchAbout.goodsList = []
   biliNodeSearch()
 }
@@ -248,13 +263,15 @@ function analysisAction() {
   }
   let lastArrary = []
   for (let t in map) {
+    let lowMap = getLowPrice(map[t])
     let map2 = {
       name: map[t][0].name,
       itemsId: t,
       list: map[t],
       img: map[t][0].icon,
       id: map[t][0].id,
-      price: getLowPrice(map[t])
+      price: lowMap.remark,
+      lowId: lowMap.lowId,
     }
     if (searchAbout.keyMap[t]) {
       filterMap.star.push(map2)
@@ -269,26 +286,33 @@ function analysisAction() {
 }
 function getLowPrice(list: any) {
   let low = Number(list[0].price)
+  let lowId = list[0].id
   let high = Number(list[0].price)
   for (let i of list) {
     if (Number(i.price) < low) {
       low = Number(i.price)
+      lowId = i.id
     }
     if (Number(i.price) > high) {
       high = Number(i.price)
     }
   }
-  return low + '~' + high
+  return {
+    'remark' : low + '~' + high,
+    'lowId':lowId
+  }
 }
 
 interface nodeSearch {
   page: number;
   size: number;
+  timeInterval:number,
   name: string;
 }
 const nodeSearch: nodeSearch = reactive({
   page: 1,
   size: 500,
+  timeInterval:0,
   name: ''
 })
 
@@ -332,15 +356,64 @@ function biliNodeSearch() {
     }
   });
 }
-function clear() {
-  searchAbout.goodsList = []
-  searchAbout.inSearch = false
-  searchAbout.lastArrary = []
+
+
+
+function check() {
+  if(searchAbout.canCheck){
+    searchAbout.canCheck = false
+  }else{
+    searchAbout.canCheck = true
+    searchAbout.checkIndex = 0
+    nodeSearch.timeInterval = setInterval(()=>{
+      console.log(searchAbout.checkIndex , searchAbout.lastArrary.length)
+      if(!searchAbout.canCheck || (searchAbout.checkIndex >= searchAbout.lastArrary.length)){
+        clearInterval(nodeSearch.timeInterval)
+        ElMessage.success('stop')
+      }else{
+        getStatusInfo(searchAbout.checkIndex)
+        searchAbout.checkIndex += 1
+      }
+    },400)
+    // getStatusInfo(searchAbout.checkIndex)
+
+  }
+  
 }
-function reset() {
-  searchAbout.goodsList = []
-  searchAbout.inSearch = false
-  searchAbout.lastArrary = []
+
+function getStatusInfo(index : keyof searchAbout['lastArrary']){
+  let urlList = [
+    "http://shop.isaacplay.fun/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://47.116.2.139:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://36.140.121.164:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://47.100.78.114/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail"
+  ]
+  let urlIndex = (Number(index)%4)
+  $.ajax({
+    type: "GET",
+    url: `${urlList[urlIndex]}?c2cItemsId=${searchAbout.lastArrary[index].lowId}`,
+    timeout: 5000,
+    success: function (res) {
+      if(res.code == 0){
+        if(res.data.publishStatus == '2' && res.data.saleStatus == '1'){
+          searchAbout.lastArrary[index].status = '下架'
+          searchAbout.lastArrary[index].color = 'gray'
+        }else if(res.data.publishStatus == '1' && res.data.saleStatus == '1'){
+          searchAbout.lastArrary[index].status = '在卖'
+          searchAbout.lastArrary[index].color = 'green'
+        }else if(res.data.saleStatus == '2'){
+          searchAbout.lastArrary[index].status = '卖掉了'
+          searchAbout.lastArrary[index].color = 'red'
+        }else{
+          searchAbout.lastArrary[index].status = '未知'
+          searchAbout.lastArrary[index].color = 'red'
+        }
+      }
+    },
+    error:function (res) {
+      console.log(res)
+    }
+  });
 }
 
 </script>
@@ -359,6 +432,16 @@ function reset() {
   height: calc(100% - 120px);
   overflow-y: scroll;
 }
+.sale-tag{
+  position: absolute;
+  width: 20%;
+  top: 52px;
+  right: 32px;
+  img{
+    width: 100%;
+    height: auto;
+  }
+}
 
 .goods-item {
   width: calc(20% - 12px);
@@ -367,6 +450,7 @@ function reset() {
   margin-right: 12px;
   border-radius: 24px;
   margin-bottom: 24px;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -381,6 +465,7 @@ function reset() {
   margin-right: 12px;
   border-radius: 24px;
   margin-bottom: 24px;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -460,6 +545,7 @@ function reset() {
 
 .filter-header-right {
   align-items: center;
+  display: flex;
 }
 
 .filter-header-right>div {

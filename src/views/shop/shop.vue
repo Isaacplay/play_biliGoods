@@ -22,10 +22,10 @@
       <!-- 在卖的 -->
       <template v-if="UserInfo.sellShow">
         <div :class="checkInList(item.lowId) ? 'goods-item-instar' : 'goods-item'" v-for="(item, index) in UserInfo.lastArrary" :key="index">
-          <div>
+          <div style="width: 100%;">
             <div>倒计时 ：{{ item.deadLine }}</div>
             <img class="goods-item-img" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
-            <div>{{ item.name }}</div>
+            <div class="text-overflow">{{ item.name }}</div>
             <div>截止日期 ：{{ item.endTime }}</div>
             <div style="white-space: nowrap;">
               <span v-for="(item2) in item.list" :key="item2.id" class="click-span" @click="openUrl(item2.id)">{{
@@ -44,9 +44,9 @@
       <!-- 没在卖的 -->
       <template v-else>
         <div :class="item.isInsell ? 'goods-item' : 'goods-item-green'" v-for="(item, index) in UserInfo.boxItemFinList" :key="index">
-          <div>
+          <div style="width: 100%;">
             <img class="goods-item-img" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
-            <div>{{ item.name }}</div>
+            <div class="text-overflow">{{ item.name }}</div>
             <div style="white-space: nowrap;">有 {{item.list.length}} 个</div>
             <div @click="addAction(item,'Add')" class="icon-addrefush"><el-icon><Plus /></el-icon></div>
           </div>
@@ -233,7 +233,7 @@ function setConfirm(){
 }
 
 function openAnalysis(itemId: String) {
-  window.open(`http://111.229.88.32:7777/play_biligoods/#/?id=${itemId}`)
+  window.open(`http://shop.isaacplay.fun/play_biligoods/#/?id=${itemId}`)
 }
 
 function openUrl(itemId: String) {

@@ -26,7 +26,7 @@ if(!localStorage.getItem("settingMap")){
       url:'http://111.229.88.32:3000/biligoods/getBiligoodslist',
     },
     me:{
-      url:'http://111.229.88.32:7777/play_biligoods/api',
+      url:'http://shop.isaacplay.fun/play_biligoods/api',
     }
   }
   localStorage.setItem("settingMap",JSON.stringify(settingMap));
