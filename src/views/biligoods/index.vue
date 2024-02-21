@@ -62,7 +62,7 @@
           <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
         <el-form-item label="Price" :label-width="formLabelWidth">
-          <el-input v-model="form.price" autocomplete="off" />
+          <el-input v-model="form.price" type="number" autocomplete="off" />
         </el-form-item>
       </el-form>
       <div>
@@ -385,7 +385,7 @@ function getStatusInfo(index : keyof searchAbout['lastArrary']){
   let urlList = [
     "http://shop.isaacplay.fun/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
     "http://47.116.2.139:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
-    "http://36.140.121.164:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://121.36.229.114:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
     "http://47.100.78.114/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail"
   ]
   let urlIndex = (Number(index)%4)

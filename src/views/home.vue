@@ -2,7 +2,7 @@
   <div class="container">
     <div class="top-header">
       <div class="left-header"></div>
-      <div class="right-header" ></div>
+      <div class="right-header"></div>
     </div>
     <div class="contant">
       <div class="left-con"></div>
@@ -13,50 +13,57 @@
     </div>
     <div class="bottom-con">
       <div class="box">
-        <div v-show="!isMobile" :class="homePage.flag == 'biligoods'?'icon-con max-img':'icon-con'" @click="changeToFlag('biligoods')">
-          <img  src="@/assets/icon/home.png"/>
+        <div v-show="!isMobile" :class="homePage.flag == 'biligoods' ? 'icon-con max-img' : 'icon-con'"
+          @click="changeToFlag('biligoods')">
+          <img src="@/assets/icon/home.png" />
           <div>首页</div>
         </div>
-        <div :class="homePage.flag == 'biliShop'?'icon-con max-img':'icon-con'" @click="changeToFlag('biliShop')">
-          <img  src="@/assets/icon/Myhome.png"/>
+        <div :class="homePage.flag == 'biliShop' ? 'icon-con max-img' : 'icon-con'" @click="changeToFlag('biliShop')">
+          <img src="@/assets/icon/Myhome.png" />
           <div>分析</div>
         </div>
-        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'lost'?'icon-con max-img':'icon-con'" @click="changeToFlag('lost')">
-          <img  src="@/assets/icon/lost.png"/>
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'lost' ? 'icon-con max-img' : 'icon-con'"
+          @click="changeToFlag('lost')">
+          <img src="@/assets/icon/lost.png" />
           <div>耻辱榜</div>
         </div>
-        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'favorites'?'icon-con max-img':'icon-con'" @click="changeToFlag('favorites')">
-          <img src="@/assets/icon/fav.png"/>
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'favorites' ? 'icon-con max-img' : 'icon-con'"
+          @click="changeToFlag('favorites')">
+          <img src="@/assets/icon/fav.png" />
           <div>收藏夹</div>
         </div>
-        <div v-show='haveCookie' :class="homePage.flag == 'shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('shop')">
-          <img src="@/assets/icon/shopping.png"/>
+        <div v-show='haveCookie' :class="homePage.flag == 'shop' ? 'icon-con max-img' : 'icon-con'"
+          @click="changeToFlag('shop')">
+          <img src="@/assets/icon/shopping.png" />
           <div>橱窗</div>
         </div>
         <!-- <div v-show="isMobile" :class="homePage.flag == 'shop'?'icon-con max-img':'icon-con'" @click="changeToFlag('mobileShop')">
           <img src="@/assets/icon/shopping.png"/>
           <div>橱窗</div>
         </div> -->
-        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'me'?'icon-con max-img':'icon-con'" @click="changeToFlag('me')">
-          <img src="@/assets/icon/me.png"/>
+        <div v-show="!isMobile && haveCookie" :class="homePage.flag == 'me' ? 'icon-con max-img' : 'icon-con'"
+          @click="changeToFlag('me')">
+          <img src="@/assets/icon/me.png" />
           <div>统计</div>
         </div>
-        <div v-show="!isMobile" :class="homePage.flag == 'setting'?'icon-con max-img':'icon-con'" @click="changeToFlag('setting')">
-          <img src="@/assets/icon/setting.png"/>
+        <div v-show="!isMobile" :class="homePage.flag == 'setting' ? 'icon-con max-img' : 'icon-con'"
+          @click="changeToFlag('setting')">
+          <img src="@/assets/icon/setting.png" />
           <div>设置</div>
         </div>
       </div>
       <div class="icpCon">
-        <img style="margin-right: 12px;" src="@/assets/icon/备案图标.png"/>
-        <a style="margin-right: 12px;" href="https://beian.mps.gov.cn/#/query/webSearch?code=32011402011508" rel="noreferrer" target="_blank">苏公网安备32011402011508</a>
+        <img style="margin-right: 12px;" src="@/assets/icon/备案图标.png" />
+        <a style="margin-right: 12px;" href="https://beian.mps.gov.cn/#/query/webSearch?code=32011402011508"
+          rel="noreferrer" target="_blank">苏公网安备32011402011508</a>
         <a href="https://beian.miit.gov.cn/#/Integrated/index" rel="noreferrer" target="_blank">苏ICP备2024061216号</a>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { reactive,markRaw,ref,onMounted} from 'vue'
-import {useRoute,useRouter} from 'vue-router'
+import { reactive, markRaw, ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import biliShop from './biliShop/index.vue'
 import biligoods from './biligoods/index.vue'
 import favorites from './favorites/favorites.vue'
@@ -65,23 +72,23 @@ import setting from './setting/setting.vue'
 import shop from './shop/shop.vue'
 import lost from './lost/lost.vue'
 
-const tab  = ref(null as any)
-const isMobile  = ref(false)
+const tab = ref(null as any)
+const isMobile = ref(false)
 const haveCookie = ref(false)
 const route = useRoute()
 
 interface lookup {
-    [key: string]: object, 
-}; 
+  [key: string]: object,
+};
 
 const homePage = reactive({
-  flag:'biligoods',
+  flag: 'biligoods',
 })
 
 onMounted(() => {
   changeToFlag('biligoods')
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
-  if(route.query.id && route.query.id.length > 0){
+  if (route.query.id && route.query.id.length > 0) {
     changeToFlag('biliShop')
   }
   getWindowSize()
@@ -96,55 +103,63 @@ function checkCookie(objname: string) {//获取指定名称的cookie的值
   return false
 }
 
-function changeToFlag(flag : string){
+function changeToFlag(flag: string) {
   homePage.flag = flag
-  const lookup : lookup = {
-    biligoods,favorites,me,setting,shop,biliShop,lost
+  const lookup: lookup = {
+    biligoods, favorites, me, setting, shop, biliShop, lost
   }
   tab.value = markRaw(lookup[flag])
 }
 
-function getWindowSize(){
+function getWindowSize() {
   let w = window.innerWidth
-  if(w < 600){
+  if (w < 600) {
     isMobile.value = true
     changeToFlag('biliShop')
   }
 }
 </script>
 <style lang="scss" scoped>
-@media screen and (max-width: 600px){
-  .main-con,.bottom-con{
+@media screen and (max-width: 600px) {
+
+  .main-con,
+  .bottom-con {
     width: 100% !important;
   }
-  .right-con,.left-con{
+
+  .right-con,
+  .left-con {
     width: 0px !important;
     display: none !important;
   }
 }
-.container{
+
+.container {
   width: 100%;
   height: 100%;
   font-size: 14px;
   // background-color: rgb(235,235,235);
   background-color: #6ba7af;
   position: relative;
-  .top-header{
+
+  .top-header {
     width: 100%;
     height: 120px;
     background-color: #6ba7af;
     position: relative;
+
     // z-index: 5;
     // background-image: url('@/assets/background/top_bar.jpg');
     // background-position: top;
     // background-size: contain;
     // background-repeat: no-repeat;
-    img{
+    img {
       width: 50%;
       height: auto;
       cursor: pointer;
     }
-    .right-header{
+
+    .right-header {
       position: absolute;
       width: 10%;
       right: 0;
@@ -152,7 +167,8 @@ function getWindowSize(){
       height: 100%;
       text-align: center;
     }
-    .left-header{
+
+    .left-header {
       position: absolute;
       text-align: center;
       width: 10%;
@@ -161,16 +177,19 @@ function getWindowSize(){
       height: 100%;
     }
   }
-  .contant{
+
+  .contant {
     display: flex;
     height: calc(100% - 120px);
-    .main-con{
+
+    .main-con {
       width: 70%;
       transform: translateY(-120px);
       height: calc(100% + 40px);
       overflow: scroll;
     }
-    .left-con{
+
+    .left-con {
       width: 15%;
       background-image: url('@/assets/background/newYearMiku.png');
       background-position: top;
@@ -178,7 +197,8 @@ function getWindowSize(){
       background-repeat: no-repeat;
       transform: rotateY(180deg);
     }
-    .right-con{
+
+    .right-con {
       width: 15%;
       background-image: url('@/assets/background/newYearMiku.png');
       background-position: top;
@@ -187,7 +207,8 @@ function getWindowSize(){
       position: relative;
     }
   }
-  .bottom-con{
+
+  .bottom-con {
     position: absolute;
     bottom: 0;
     width: 70%;
@@ -199,45 +220,52 @@ function getWindowSize(){
     padding-bottom: 4px;
     left: 50%;
     background: white;
-    -webkit-transform: translate3d(-50%,0,0);
-    .icpCon{
+    -webkit-transform: translate3d(-50%, 0, 0);
+
+    .icpCon {
       display: flex;
       align-items: center;
-      img{
+
+      img {
         width: 16px;
         height: 16px;
       }
-      a{
+
+      a {
         // color: white;
         font-size: 12px;
       }
+
       white-space: nowrap;
       position: absolute;
       bottom: 12px;
       left: 6px;
     }
-    .box{
+
+    .box {
       display: flex;
       align-items: center;
-      border: 1px solid rgb(235,235,235);
+      border: 1px solid rgb(235, 235, 235);
       border-radius: 24px;
       padding: 3px 24px;
-      .icon-con{
+
+      .icon-con {
         margin: 0 12px;
         font-size: 12px;
         text-align: center;
-        img{
+
+        img {
           width: auto;
           height: 35px;
           cursor: pointer;
         }
       }
-      .max-img > img{
+
+      .max-img>img {
         width: auto;
         height: 50px !important;
         cursor: pointer;
       }
     }
   }
-}
-</style>
+}</style>

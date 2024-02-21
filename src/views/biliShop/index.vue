@@ -47,7 +47,7 @@
           <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
         <el-form-item label="Price" :label-width="formLabelWidth">
-          <el-input v-model="form.price" autocomplete="off" />
+          <el-input v-model="form.price" type="number" autocomplete="off" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -229,6 +229,7 @@ function getStatusInfo(index : keyof searchAbout['goodsList']){
 function getItemsByid(){
   getBuyItemsById()
   getLockListById(searchAbout.id)
+  searchAbout.index = 0
   const loading = ElLoading.service({
     lock: true,
     text: 'Loading',

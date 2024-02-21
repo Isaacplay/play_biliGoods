@@ -5,6 +5,7 @@
         <div class="filter-item">
           <div style="margin-bottom:12px" class="filter-name">刷新列表有: {{ UserInfo.refushList.length }} 个</div>
           <div class="filter-name">{{ UserInfo.msg }}</div>
+          <div class="filter-name" v-if="!UserInfo.sellShow">{{ UserInfo.msg2 }}</div>
         </div>
       </div>
       <div>
@@ -47,7 +48,7 @@
           <div style="width: 100%;">
             <img class="goods-item-img" @click="openAnalysis(item.itemsId)" :src=item.img alt="">
             <div class="text-overflow">{{ item.name }}</div>
-            <div style="white-space: nowrap;">有 {{item.list.length}} 个</div>
+            <div style="white-space: nowrap;">有 {{item.list.length}} 个 （平均价 {{ item.avgPrice || ''}}）</div>
             <div @click="addAction(item,'Add')" class="icon-addrefush"><el-icon><Plus /></el-icon></div>
           </div>
         </div>
@@ -80,7 +81,7 @@
       <div class="dialog-con">
         <div class="dialog-name">{{ publishInfo.selectItem.itemsName || publishInfo.selectItem.name }}</div>
         <!-- <div class="dialog-name">折扣为 : {{ Number(publishInfo.price) / publishInfo.selectItem.showPrice }}</div> -->
-        <el-input class="w240" v-model="publishInfo.price" />
+        <el-input class="w240" type="number" v-model="publishInfo.price" />
       </div>
       <template #footer>
         <span class="dialog-footer">
@@ -183,11 +184,13 @@ interface UserInfo {
   },
   sellShow:boolean,
   msg:string,
+  msg2:string,
   shopTime: {};
   fishFlag: {};
   boxItemList: [];
   boxItemFinList:[];
   refushList:[];
+  butItemList:{};
 }
 
 const UserInfo: UserInfo = reactive({
@@ -198,9 +201,11 @@ const UserInfo: UserInfo = reactive({
   shopTime:{},
   fishFlag:{},
   msg:'',
+  msg2:'',
   sellShow:true,
   boxItemList:[],
-  boxItemFinList:[]
+  boxItemFinList:[],
+  butItemList:{}
 })
 
 onMounted(() => {
@@ -233,7 +238,7 @@ function setConfirm(){
 }
 
 function openAnalysis(itemId: String) {
-  window.open(`http://shop.isaacplay.fun/play_biligoods/#/?id=${itemId}`)
+  window.open(`${window.location.href}?id=${itemId}`)
 }
 
 function openUrl(itemId: String) {
@@ -462,6 +467,7 @@ function switchType(){
 function analysisBox(){
   let map = {}
   let typeNum = 0
+  let skuIdList = []
   for(let i of UserInfo.boxItemList){
     if(map[i.skuId]){
       map[i.skuId].list.push(i)
@@ -477,9 +483,11 @@ function analysisBox(){
         'img':i.itemsImage,
         'name':i.itemsName,
         'list':[i],
+        'avgPrice':'',
         'isInsell':flag
       }
       typeNum ++ 
+      skuIdList.push(i.skuId)
     }
   }
 
@@ -490,7 +498,39 @@ function analysisBox(){
     list.push(map[i])
   }
   UserInfo.boxItemFinList = list
+  getBuyItemList(skuIdList)
+}
 
+function getBuyItemList(list){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/shopList/getBuyShopItem?id=${list.join(',')}`,
+    timeout: 20000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    success: function (res) {
+      let map = {}
+      for(let i of res){
+        map[i._id] = i
+      }
+      UserInfo.butItemList = map
+      let allPrice = 0
+      for(let i of UserInfo.boxItemFinList){
+        if(map[i.itemsId]){
+          i.avgPrice = map[i.itemsId].price
+          allPrice = allPrice + (i.avgPrice * i.list.length)
+        }else{
+          i.avgPrice = '--'
+        }
+      }
+      allPrice = allPrice.toFixed(2)
+      UserInfo.msg2 = `仓库里里压了${allPrice}`
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  });
 }
 
 function getGoodsInBOX1(){

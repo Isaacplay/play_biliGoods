@@ -9,18 +9,6 @@
     </div>
     <div class="setting-box">
       <div class="setting-item">
-        <div class="title">BiliGoods</div>
-        <div class="setting-filter">
-          <div>请求源地址：</div>
-          <el-autocomplete
-            v-model="settingMap.biligoods.url"
-            :fetch-suggestions="querySearch"
-            clearable
-            class="w480"
-          />
-        </div>
-      </div>
-      <div class="setting-item">
         <div class="title">我的</div>
         <div class="setting-filter">
           <div>请求源地址：</div>
@@ -42,6 +30,17 @@
             clearable
             class="w960"
           />
+        </div>
+      </div>
+      <div class="setting-item" v-if="DedeUserID == '2054000'">
+        <div class="title">Script Config</div>
+        <div class="setting-filter">
+          <div>Offset：</div>
+          <el-input v-model="commonConfig.offset" clearable class="w240"/>
+        </div>
+        <div class="setting-filter">
+          <div>Check Limit：</div>
+          <el-input v-model="commonConfig.checkLimit" clearable class="w240"/>
         </div>
       </div>
     </div>
@@ -69,7 +68,13 @@ let settingMap = reactive({
   }
 })
 
+let commonConfig = reactive({
+  offset:'',
+  checkLimit:''
+})
+
 let cookie = ref('')
+let DedeUserID = ref('')
 
 onMounted(() => {
   cookie.value = document.cookie
@@ -79,7 +84,46 @@ onMounted(() => {
     settingMap.biligoods = map.biligoods
     settingMap.me = map.me
   }
+  if(haveCookie.value){
+    DedeUserID.value = getCookie('DedeUserID')  
+    if(DedeUserID.value == '2054000'){
+      getCommonConfig()
+    }
+  }
 })
+
+function getCommonConfig(){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/commonConfig/getCommonConfig?id=offset,checkLimit`,
+    timeout: 20000,
+    success: function (res) {
+      for(let i of res){
+        commonConfig[i._id] = i.value
+      }
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  });
+}
+
+function saveCommonConfig(id : String,value : String){
+  let list = {
+    "id": id,
+    "value": value
+  }
+  $.ajax({
+    type: "POST",
+    url: `http://111.229.88.32:3000/commonConfig/changeCommonConfig`,
+    timeout: 20000,
+    data: list,
+    success: function (res) {},
+    error: function (res) {
+      console.log(res)
+    }
+  });
+}
 
 const querySearch = (queryString: string, cb: any) => {
   const results = queryString ? setting.urlList.filter(createFilter(queryString)) : setting.urlList
@@ -100,6 +144,10 @@ interface RestaurantItem {
 function saveAction(){
   localStorage.setItem("settingMap",JSON.stringify(settingMap));
   UpdateCookies(cookie.value)
+  if(haveCookie.value && DedeUserID.value == '2054000'){
+    saveCommonConfig('offset',commonConfig.offset)
+    saveCommonConfig('checkLimit',commonConfig.checkLimit)
+  }
   ElMessage.success('保存成功！')
 }
 function UpdateCookies(cookies : string){
@@ -119,6 +167,15 @@ function checkCookie(objname : string){     //获取指定名称的cookie的值
     if(temp[0] == objname) return true;
   }
   return false
+}
+
+function getCookie(objname : string){     //获取指定名称的cookie的值
+  var arrstr = document.cookie.split("; ");
+  for(var i = 0;i < arrstr.length;i ++){
+    var temp = arrstr[i].split("=");
+    if(temp[0] == objname) return temp[1];
+  }
+  return ''
 }
 </script>
 <style lang="scss"  scoped>
