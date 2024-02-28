@@ -42,6 +42,16 @@
           <div>Check Limit：</div>
           <el-input v-model="commonConfig.checkLimit" clearable class="w240"/>
         </div>
+        <div class="setting-filter">
+          <div>Auto Pay：</div>
+          <el-switch @change="autoPayChange" v-model="commonConfig.autoPay" />
+        </div>
+        <div class="setting-filter">
+          <div>浮动比例：</div>
+          <el-input v-model="commonConfig.floatLimit" clearable class="w240">
+            <template #append>%</template>
+          </el-input>
+        </div>
       </div>
     </div>
   </div>
@@ -70,7 +80,9 @@ let settingMap = reactive({
 
 let commonConfig = reactive({
   offset:'',
-  checkLimit:''
+  checkLimit:'',
+  autoPay:false,
+  floatLimit:0
 })
 
 let cookie = ref('')
@@ -92,14 +104,25 @@ onMounted(() => {
   }
 })
 
+function autoPayChange(type : boolean){
+  console.log(type)
+  if(type){
+    commonConfig.floatLimit = 0
+  }else{
+    commonConfig.floatLimit = 4
+  }
+}
 function getCommonConfig(){
   $.ajax({
     type: "GET",
-    url: `http://111.229.88.32:3000/commonConfig/getCommonConfig?id=offset,checkLimit`,
+    url: `http://111.229.88.32:3000/commonConfig/getCommonConfig?id=offset,checkLimit,autoPay,floatLimit`,
     timeout: 20000,
     success: function (res) {
       for(let i of res){
         commonConfig[i._id] = i.value
+        if(i._id == 'autoPay'){
+          commonConfig.autoPay = i.value == 'true' ? true : false
+        }
       }
     },
     error: function (res) {
@@ -108,7 +131,7 @@ function getCommonConfig(){
   });
 }
 
-function saveCommonConfig(id : String,value : String){
+function saveCommonConfig(id : String,value : any){
   let list = {
     "id": id,
     "value": value
@@ -147,6 +170,8 @@ function saveAction(){
   if(haveCookie.value && DedeUserID.value == '2054000'){
     saveCommonConfig('offset',commonConfig.offset)
     saveCommonConfig('checkLimit',commonConfig.checkLimit)
+    saveCommonConfig('autoPay',commonConfig.autoPay)
+    saveCommonConfig('floatLimit',commonConfig.floatLimit)
   }
   ElMessage.success('保存成功！')
 }

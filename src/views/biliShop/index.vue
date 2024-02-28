@@ -109,7 +109,7 @@ function checkCookie(objname: string) {//获取指定名称的cookie的值
 }
 
 function checkStatus(){
-  searchAbout.limit = searchAbout.index + 15
+  searchAbout.limit = searchAbout.index + 30
   getStatusInfo(searchAbout.index)
 }
 
@@ -190,9 +190,17 @@ function insertCheckList() {
 }
 
 function getStatusInfo(index : keyof searchAbout['goodsList']){
+  let urlList = [
+    "http://shop.isaacplay.fun/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://47.116.2.139:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://121.36.229.114:7777/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "http://47.100.78.114/play_biligoods/api/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+    "https://mall.bilibili.com/mall-magic-c/internet/c2c/items/queryC2cItemsDetail",
+  ]
+  let urlIndex = (Number(index)%5)
   $.ajax({
     type: "GET",
-    url: `https://mall.bilibili.com/mall-magic-c/internet/c2c/items/queryC2cItemsDetail?c2cItemsId=${searchAbout.goodsList[index]._id}`,
+    url: `${urlList[urlIndex]}?c2cItemsId=${searchAbout.goodsList[index]._id}`,
     timeout: 20000,
     success: function (res) {
       if(res.code == 0){
@@ -213,7 +221,7 @@ function getStatusInfo(index : keyof searchAbout['goodsList']){
           searchAbout.index++
           setTimeout(()=>{
             getStatusInfo(searchAbout.index)
-          },500)
+          },100)
         }else{
 
         }
