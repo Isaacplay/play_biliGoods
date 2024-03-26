@@ -70,3 +70,10 @@ table {
   text-overflow:ellipsis;/*文字隐藏后添加省略号*/
   white-space:nowrap;  /*强制不换行*/
 }
+.flex-between{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 12px;
+
+}

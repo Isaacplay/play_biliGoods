@@ -5,52 +5,68 @@
         <div class="filter-header-left">
         </div>
         <div class="filter-header-right">
-          <el-button color="#626aef"  plain @click="exportList">导出</el-button>
+          <el-button color="#626aef"  plain @click="addMonitor">管理</el-button>
         </div>
       </div>   
     </div>
     <div class="goods-box">
-        <div class="goods-item" v-for="(item,index) in searchAbout.starList" :key="index">
-          <div>
-            <div v-if="searchAbout.lowestMap[item.itemsId]">历史搜索最低价：{{ searchAbout.lowestMap[item.itemsId] }}</div>
-            <div>{{item.name}}</div>
-            <div>{{item.price}} 
-              <span class="click-span" @click="removeFromStar(item)"> 修改 </span>
-              <span class="click-span" @click="removeFromStar(item)"> 删除 </span>
-            </div>
-          </div>
+      <div class="goods-item" v-for="(item,index) in commonConfig.readyMap" :key="index">
+        <component :is="chartCom" :item="item"></component>
       </div>
     </div>
+    <el-dialog v-model="commonConfig.show" width="400px" title="管理">
+      <div class="">
+        <el-input v-model="commonConfig.inputArea" type="textarea" :rows="10" clearable class="w240" />
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="commonConfig.show = false">Cancel</el-button>
+          <el-button type="primary" @click="ok">Confirm</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <script setup lang="ts">
 import { ref,reactive ,onMounted} from 'vue'
-import { ElMessage  } from 'element-plus'
-const addStep = ref(10)
-const stopWater = ref(false)
-const haveCookie = ref(false)
-
-onMounted(() => {
-  searchAbout.lowestMap = JSON.parse(localStorage.getItem("lowestMap") || "{}") ;   //获取最低价
-  getCheckList()
+import { ElMessage , ElLoading  } from 'element-plus'
+import chartCom from './chartCom.vue'
+const commonConfig = reactive({
+  monitorIds: [],
+  monitorMap:{},
+  show:false,
+  inputArea:'',
+  readyMap:[]
 })
 
-function getCheckList() {
+onMounted(() => {
+  getMonitorIds()
+})
+
+function ok(){
+  commonConfig.readyMap = []
+  commonConfig.monitorIds = commonConfig.inputArea.split(`,`)
+  commonConfig.show = false
+  setMonitorIds()
+}
+
+function addMonitor(){
+  commonConfig.inputArea = commonConfig.monitorIds.join(`,`)
+  commonConfig.show = true
+}
+
+function setMonitorIds(){
+  let list = {
+    "id": 'monitorIds',
+    "value": commonConfig.inputArea
+  }
   $.ajax({
-    type: "GET",
-    url: `http://111.229.88.32:3000/checkList/getCheckList`,
+    type: "POST",
+    url: `http://111.229.88.32:3000/commonConfig/changeCommonConfig`,
     timeout: 20000,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Credentials": "true",
-    },
-    success: function (res) {
-      let map = {}
-      for (let i of res) {
-        map[i._id] = i.price
-      }
-      searchAbout.starList = res
-      searchAbout.keyMap = map
+    data: list,
+    success: function (res) { 
+      getMonitorDetail()
     },
     error: function (res) {
       console.log(res)
@@ -58,31 +74,148 @@ function getCheckList() {
   });
 }
 
-function exportList(){
-  console.log(map)
+function getMonitorIds(){
+  let loading = ElLoading.service({
+    lock: true,
+    text: '拉取监控数据中...',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/commonConfig/getCommonConfig?id=monitorIds`,
+    timeout: 20000,
+    success: function (res) {
+      loading.close()
+      commonConfig.monitorIds = res[0].value.split(`,`)
+      getMonitorDetail()
+    },
+    error: function (res) {
+      loading.close()
+      console.log(res)
+    }
+  });
 }
-interface searchAbout {
-  starList: any[];
-  keyMap: {[key: string]:number};
-  lowestMap: {[key: string]:any};
+
+function getMonitorDetail(){
+  for(let i of commonConfig.monitorIds){
+    commonConfig.monitorMap[i] = {}
+    getCheckList(i)
+  }
 }
-interface starMap {
-  name: string;
-  id: any;
-  icon: any;
-  price: string;
+
+function getCheckList(id){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/checkList/getCheckList?id=${id}`,
+    timeout: 20000,
+    success: function (res) {
+      if(res.length > 0){
+        commonConfig.monitorMap[id].id = id
+        commonConfig.monitorMap[id].lockPrice = res[0].price
+        commonConfig.monitorMap[id].name = res[0].name
+      }
+      getGoods(id)
+    },
+    error:function (res) {
+      console.log(res)
+    }
+  });
 }
-const searchAbout : searchAbout = reactive({
-  starList:[],
-  keyMap:{},
-  lowestMap:{},
-})
-function removeFromStar(item : starMap){
-  
+
+function getGoods(id){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/biligoods/getBiligoodsById?id=${id}&size=50`,
+    timeout: 20000,
+    success: function (res) {
+      if(res && res.length > 0){
+        commonConfig.monitorMap[id].name = res[0].name
+        commonConfig.monitorMap[id].img = res[0].img
+        commonConfig.monitorMap[id].goodsList = res.map((item)=>{
+          item.time = Number(item.time)
+          item.price = Number(item.price)
+          item.timeDate = new Date(item.time)
+          return item
+        })
+      }
+      commonConfig.readyMap.push(commonConfig.monitorMap[id])
+    },
+    error:function (res) {
+      loading.close()
+      console.log(res)
+    }
+  });
 }
-function openUrl(itemId : String){
-    window.open(`https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleBar=1&itemsId=${itemId}&from=market_index`)
+
+function init(id) {
+  let list = commonConfig.monitorMap[id].goodsList.concat();
+  list.sort((a,b)=>{
+    return a.time - b.time
+  })
+  // let xAxis = []
+  let value = []
+  let checkValue = []
+  list.forEach((item,index)=>{
+    value.push([item.time,Number(item.price)])
+    checkValue.push([item.time,Number(commonConfig.monitorMap[id].lockPrice)])
+  })
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(main.value);
+  // 指定图表的配置项和数据
+  var option = {
+    title: {
+      text: '时间价格走势'
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross'
+      }
+    },
+    xAxis: {
+      type: 'time',
+      // data: xAxis
+    },
+    yAxis: {
+      type: 'value'
+    },
+    dataZoom: [
+      {
+          type: 'inside',
+          show: true,
+          xAxisIndex: [0],
+          start: 70,
+          end: 100
+      },
+      {
+          type: 'inside',
+          show: true,
+          yAxisIndex: [0],
+          start: 1,
+          end: 100
+      },
+    ],
+    series: [
+      {
+        data: value,
+        type: 'line',
+        smooth: true
+      }
+    ]
+  };
+  if(LockList.isInList){
+    option.series.push({
+        data: checkValue,
+        type: 'line',
+        smooth: true
+    })
+  }
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option);
 }
+
+
+
 </script>
 <style scoped>
 .click-span{
@@ -91,15 +224,15 @@ function openUrl(itemId : String){
   margin-right: 12px;
 }
 .goods-box{
-  padding: 24px;
-  display: flex;
-  flex-wrap: wrap;
+  padding: 24px 12px;
   background-color: white;
   height: calc(100% - 120px);
   overflow-y: scroll;
+  display: flex;
+  flex-wrap: wrap;
 }
 .goods-item{
-  width: calc(50% - 12px);
+  width: 49%;
   border: 4px solid rgb(235,235,235);
   padding: 6px 0;
   margin-right: 12px;

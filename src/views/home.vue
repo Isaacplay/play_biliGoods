@@ -139,13 +139,13 @@ function getWindowSize() {
   height: 100%;
   font-size: 14px;
   // background-color: rgb(235,235,235);
-  background-color: rgba(255,242,241,0.3);
+  background-color: rgba(255,242,241,1);
   position: relative;
 
   .top-header {
     width: 100%;
     height: 120px;
-    background-color: rgba(255,242,241,0.3);
+    background-color: rgba(146, 50, 121, 0.329);
     position: relative;
 
     // z-index: 5;

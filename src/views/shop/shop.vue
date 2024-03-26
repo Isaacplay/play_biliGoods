@@ -40,6 +40,10 @@
             <img v-if="UserInfo.fishFlag[item.itemsId]" src="@/assets/icon/xianyu.png" alt="">
             <img v-else src="@/assets/icon/xianyu-fill.png" alt="">
           </div>
+          <div @click="changeFavFlag(item)" class="icon-favFlag">
+            <img v-if="isInFav(item.itemsId)" src="@/assets/icon/inFav.png" alt="">
+            <img v-else src="@/assets/icon/noFav.png" alt="">
+          </div>
         </div>
       </template>
       <!-- 没在卖的 -->
@@ -119,6 +123,44 @@ const publishInfo: publishInfo = reactive({
   price:0,
   type:'Add'
 })
+function changeFavFlag(item){
+  let id = item.itemsId
+  let index = -1
+  for(let i in UserInfo.monitorIds){
+    if(id == UserInfo.monitorIds[i]){
+      index = i
+    }
+  }
+  if(index == -1){
+    UserInfo.monitorIds.push(id)
+  }else{
+    UserInfo.monitorIds.splice(index,1)
+  }
+  $.ajax({
+    type: "POST",
+    url: `http://111.229.88.32:3000/commonConfig/changeCommonConfig`,
+    timeout: 20000,
+    data: {
+      "id": "monitorIds",
+      "value": UserInfo.monitorIds.join(',')
+    },
+    success: function (res) { 
+      ElMessage.success('操作成功')
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  });
+}
+
+function isInFav(id){
+  let list = UserInfo.monitorIds.join(',')
+  if(list.indexOf(id) == -1){
+    return false
+  }else{
+    return true
+  }
+}
 function addAction(item : any,type : string){
   publishInfo.selectItem = item.list[0]
   publishInfo.price = 0
@@ -191,6 +233,7 @@ interface UserInfo {
   boxItemFinList:[];
   refushList:[];
   butItemList:{};
+  monitorIds:[];
 }
 
 const UserInfo: UserInfo = reactive({
@@ -205,7 +248,8 @@ const UserInfo: UserInfo = reactive({
   sellShow:true,
   boxItemList:[],
   boxItemFinList:[],
-  butItemList:{}
+  butItemList:{},
+  monitorIds:[],
 })
 
 onMounted(() => {
@@ -214,12 +258,66 @@ onMounted(() => {
     let map = JSON.parse(localStorage.getItem("settingMap") || "{}");   //获取设置
     settingMap.me = map.me
   }
-  let shopTime = JSON.parse(localStorage.getItem("shopTime") || "{}");   //获取设置
-  let fishFlag = JSON.parse(localStorage.getItem("fishFlag") || "{}");   //闲鱼挂着
-  UserInfo.shopTime = shopTime
-  UserInfo.fishFlag = fishFlag
+  // let shopTime = JSON.parse(localStorage.getItem("shopTime") || "{}");   //获取设置
+  // let fishFlag = JSON.parse(localStorage.getItem("fishFlag") || "{}");   //闲鱼挂着
+  // UserInfo.shopTime = shopTime
+  // UserInfo.fishFlag = fishFlag
+  getCommonConfig("shopTime")
+  getCommonConfig("fishFlag")
   refeashAction()
+  getMonitorIds()
 })
+
+function getMonitorIds(){
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/commonConfig/getCommonConfig?id=monitorIds`,
+    timeout: 20000,
+    success: function (res) {
+      UserInfo.monitorIds = res[0].value.split(`,`)
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  });
+}
+
+function setCommonConfig(type: string, value: object) {
+  let list = {
+    "id": type,
+    "value": JSON.stringify(value),
+  }
+  $.ajax({
+    type: "POST",
+    url: `http://111.229.88.32:3000/commonConfig/changeCommonConfig`,
+    timeout: 20000,
+    data: list,
+    success: function (res) { 
+      ElMessage.success('保存成功！')
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  });
+}
+
+function getCommonConfig(type: string) {
+  $.ajax({
+    type: "GET",
+    url: `http://111.229.88.32:3000/commonConfig/getCommonConfig?id=${type}`,
+    timeout: 20000,
+    success: function (res) {
+      if(type == 'shopTime'){
+        UserInfo.shopTime = JSON.parse(res[0].value)
+      }else if(type == 'fishFlag'){
+        UserInfo.fishFlag = JSON.parse(res[0].value)
+      }
+    },
+    error: function (res) {
+      console.log(res)
+    }
+  });
+}
 
 function refeashAction(){
   if (haveCookie.value) {
@@ -231,8 +329,9 @@ function refeashAction(){
 function setConfirm(){
   let time = +new Date(value1.value)
   UserInfo.shopTime[UserInfo.cateGoryItem.itemsId] = time
-  localStorage.setItem("shopTime",JSON.stringify(UserInfo.shopTime));
-  ElMessage.success('保存成功！')
+  setCommonConfig("shopTime",UserInfo.shopTime)
+  // localStorage.setItem("shopTime",JSON.stringify(UserInfo.shopTime));
+  // ElMessage.success('保存成功！')
   dialogVisible.value = false
   // console.log(time)
 }
@@ -336,12 +435,11 @@ function getLowPrice(list: any) {
 function changeFishFlag(item){
   if(UserInfo.fishFlag[item.itemsId]){
     UserInfo.fishFlag[item.itemsId] = false
-    ElMessage.success('移除成功！')
   }else{
     UserInfo.fishFlag[item.itemsId] = true
-    ElMessage.success('添加成功！')
   }
-  localStorage.setItem("fishFlag",JSON.stringify(UserInfo.fishFlag));
+  // localStorage.setItem("fishFlag",JSON.stringify(UserInfo.fishFlag));
+  setCommonConfig("fishFlag",UserInfo.fishFlag)
 }
 
 function addRefushAction(item){
@@ -707,6 +805,17 @@ function getCookie(objname : string){     //获取指定名称的cookie的值
     font-size: 16px;
     cursor: pointer;
   }
+  .icon-favFlag{
+    position: absolute;
+    top: 54px;
+    left: 16px;
+    font-size: 16px;
+    cursor: pointer;
+    img{
+      width: 16px;
+      height: 16px;
+    }
+  }
   .icon-fishFlag{
     position: absolute;
     bottom: 16px;
@@ -772,6 +881,17 @@ function getCookie(objname : string){     //获取指定名称的cookie的值
     right: 16px;
     font-size: 16px;
     cursor: pointer;
+  }
+  .icon-favFlag{
+    position: absolute;
+    top: 54px;
+    left: 16px;
+    font-size: 16px;
+    cursor: pointer;
+    img{
+      width: 16px;
+      height: 16px;
+    }
   }
   .icon-fishFlag{
     position: absolute;
