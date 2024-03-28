@@ -86,10 +86,14 @@ const homePage = reactive({
 })
 
 onMounted(() => {
-  changeToFlag('biligoods')
   haveCookie.value = checkCookie('buvid4'); //检测是否存在cookie
   if (route.query.id && route.query.id.length > 0) {
     changeToFlag('biliShop')
+  }else if(route.query.setting){
+    console.log(route.query.setting)
+    changeToFlag('setting')
+  }else{
+    changeToFlag('biligoods')
   }
   getWindowSize()
 })
@@ -139,13 +143,13 @@ function getWindowSize() {
   height: 100%;
   font-size: 14px;
   // background-color: rgb(235,235,235);
-  background-color: rgba(255,242,241,1);
+  background-color: #86bff4;
   position: relative;
 
   .top-header {
     width: 100%;
     height: 120px;
-    background-color: rgba(146, 50, 121, 0.329);
+    // background-color: rgba(146, 50, 121, 0.329);
     position: relative;
 
     // z-index: 5;
@@ -191,20 +195,20 @@ function getWindowSize() {
 
     .left-con {
       width: 15%;
-      background-image: url('@/assets/background/spring_left.png');
+      background-image: url('@/assets/background/fuliren.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;
-      transform: rotateY(180deg);
     }
 
     .right-con {
       width: 15%;
-      background-image: url('@/assets/background/spring_left.png');
+      background-image: url('@/assets/background/fuliren.png');
       background-position: top;
       background-size: contain;
       background-repeat: no-repeat;
       position: relative;
+      transform: rotateY(180deg);
     }
   }
 

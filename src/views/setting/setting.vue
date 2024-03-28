@@ -8,17 +8,22 @@
       </div>
     </div>
     <div class="setting-box">
-      <div class="setting-item">
-        <div class="title">我的</div>
-        <div class="setting-filter">
-          <div>请求源地址：</div>
-          <el-autocomplete v-model="settingMap.me.url" :fetch-suggestions="querySearch" clearable class="w480" />
+      <div class="setting-item" v-if="commonConfig.autoPay == 'semiAutomatic'">
+        <div class="flex-between">
+          <div class="title">半自动</div>
+          <el-button color="#626aef" plain @click="getPreData">获取</el-button>
         </div>
-      </div>
-      <div class="setting-item">
-        <div class="title">COOKIE</div>
-        <div class="setting-filter">
-          <el-input v-model="cookie" type="textarea" :rows="10" clearable class="w960" />
+        <div>
+          <div v-for="(item,index) in preList">
+            <div class="flex-between">
+              <div style="width: 80%;">{{ item.name }}</div>
+              <div>
+                <el-button color="#626aef" plain @click="confirmPreItem(item)">YES</el-button>
+                <el-button color="#626aef" plain @click="deletePreItem(item)">NO</el-button>
+              </div>
+            </div>
+            <el-progress :stroke-width="12" :percentage="item.percentage" />
+          </div>
         </div>
       </div>
       <div class="setting-item" v-if="DedeUserID == '2054000'">
@@ -36,6 +41,7 @@
           <el-select v-model="commonConfig.autoPay" placeholder="Select" size="large" style="width: 240px">
             <el-option v-for="item in commonConfig.options" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
+          <el-button v-if="commonConfig.autoPay == 'semiAutomatic'" style="margin-left: 12px;" color="#626aef" plain @click="openMonitor">打开监控页面</el-button>
           <!-- <el-switch @change="autoPayChange" v-model="commonConfig.autoPay" /> -->
         </div>
         <div class="setting-filter">
@@ -45,22 +51,17 @@
           </el-input>
         </div>
       </div>
-      <div class="setting-item" v-if="commonConfig.autoPay == 'semiAutomatic'">
-        <div class="flex-between">
-          <div class="title">半自动</div>
-          <el-button color="#626aef" plain @click="getPreData">获取</el-button>
+      <div class="setting-item">
+        <div class="title">我的</div>
+        <div class="setting-filter">
+          <div>请求源地址：</div>
+          <el-autocomplete v-model="settingMap.me.url" :fetch-suggestions="querySearch" clearable class="w480" />
         </div>
-        <div>
-          <div v-for="(item,index) in preList">
-            <div class="flex-between">
-              <div style="width: 80%;">{{ item.name }}</div>
-              <div>
-                <el-button color="#626aef" plain @click="confirmPreItem(item)">YES</el-button>
-                <el-button color="#626aef" plain @click="deletePreItem(item)">NO</el-button>
-              </div>
-            </div>
-            <el-progress :stroke-width="12" :percentage="item.percentage" />
-          </div>
+      </div>
+      <div class="setting-item">
+        <div class="title">COOKIE</div>
+        <div class="setting-filter">
+          <el-input v-model="cookie" type="textarea" :rows="10" clearable class="w960" />
         </div>
       </div>
     </div>
@@ -121,6 +122,9 @@ onMounted(() => {
   getPreData()
 })
 
+function openMonitor(){
+  window.open(`${window.location.origin}/#/semiAutomatic`)
+}
 // 半自动处理
 let preList = ref([])
 function getPreData(){
@@ -314,5 +318,6 @@ function getCookie(objname: string) {     //获取指定名称的cookie的值
   align-items: center;
   padding-left: 24px;
   margin-top: 24px;
+  white-space: nowrap;
 }
 </style>
